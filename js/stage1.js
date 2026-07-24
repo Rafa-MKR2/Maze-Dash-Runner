@@ -32,7 +32,6 @@ var stage1State = {
 
 		this.blocks = game.add.group();
 		this.blocks.enableBody = true;
-		this.coinPositions = [];
 
 		for(var row = 0; row < this.maze.length; row++){
 			for(var col = 0; col < this.maze[row].length; col++){
@@ -54,30 +53,62 @@ var stage1State = {
 					this.player.animations.add('goLeft', [16,17,18,19,20,21,22,23], 12, true);
 					this.player.animations.add('goRight', [24,25,26,27,28,29,30,31], 12, true);
 					this.player.lastDirection = null;
-				} else
-				if(tile === 3){
-					this.coinPositions.push({ x: x + tileSize / 2, y: y + tileSize / 2 });
 				}
 			}
 		}
 
-		// inimigo
-		this.enemy = game.add.sprite(75, 75, 'enemy');
-		this.enemy.anchor.set(0.5);
-		game.physics.arcade.enable(this.enemy);
-		this.enemy.animations.add('goDown', [0,1,2,3,4,5,6,7], 12, true);
-		this.enemy.animations.add('goUp', [8,9,10,11,12,13,14,15], 12, true);
-		this.enemy.animations.add('goLeft', [16,17,18,19,20,21,22,23], 12, true);
-		this.enemy.animations.add('goRight', [24,25,26,27,28,29,30,31], 12, true);
-		this.enemy.direction = 'DOWN';
+		// goblins — 4 cantos do labirinto, posicoes trocadas a cada jogo
+		var tileSize = GameConfig.TILE_SIZE;
+		var goblinSpawns = [
+			{ row: 1, col: 1 },
+			{ row: 1, col: 13 },
+			{ row: 8, col: 1 },
+			{ row: 8, col: 13 }
+		];
 
-		// moeda
-		this.coin = {};
-		this.coin.position = this.newPosition();
-		this.coin = game.add.sprite(this.coin.position.x, this.coin.position.y, 'coin');
-		this.coin.anchor.set(.5);
-		this.coin.animations.add('spin', [0,1,2,3,4,5,6,7,8,9], 10, true).play();
-		game.physics.arcade.enable(this.coin);
+		// embaralhar posicoes para variar a disposicao dos goblins
+		for(var i = goblinSpawns.length - 1; i > 0; i--){
+			var j = Math.floor(Math.random() * (i + 1));
+			var temp = goblinSpawns[i];
+			goblinSpawns[i] = goblinSpawns[j];
+			goblinSpawns[j] = temp;
+		}
+
+		this.enemies = [];
+		this.goblinAIs = [];
+
+		for(var i = 0; i < goblinSpawns.length; i++){
+			var spawnX = goblinSpawns[i].col * tileSize + tileSize / 2;
+			var spawnY = goblinSpawns[i].row * tileSize + tileSize / 2;
+
+			var enemy = game.add.sprite(spawnX, spawnY, 'enemy');
+			enemy.anchor.set(0.5);
+			game.physics.arcade.enable(enemy);
+			enemy.animations.add('goDown', [0,1,2,3,4,5,6,7], 12, true);
+			enemy.animations.add('goUp', [8,9,10,11,12,13,14,15], 12, true);
+			enemy.animations.add('goLeft', [16,17,18,19,20,21,22,23], 12, true);
+			enemy.animations.add('goRight', [24,25,26,27,28,29,30,31], 12, true);
+			enemy.direction = 'DOWN';
+
+			this.enemies.push(enemy);
+			this.goblinAIs.push(new GoblinAI(this.maze, enemy));
+		}
+
+		// moedas — posicoes validas para spawn (sem paredes, sem posicao do player)
+		var coinTilePositions = [];
+		for(var row = 0; row < this.maze.length; row++){
+			for(var col = 0; col < this.maze[row].length; col++){
+				if(this.maze[row][col] !== 1 && this.maze[row][col] !== 2){
+					coinTilePositions.push({
+						x: col * tileSize + tileSize / 2,
+						y: row * tileSize + tileSize / 2
+					});
+				}
+			}
+		}
+
+		this.coinManager = new CoinManager(this.maze, coinTilePositions);
+		this.coinManager.spawn(GameConfig.COIN_COUNT);
 
 		// placar
 		this.coins = 0;
@@ -136,10 +167,29 @@ var stage1State = {
 		}
 
 		game.physics.arcade.collide(this.player, this.blocks);
-		game.physics.arcade.overlap(this.player, this.coin, this.getCoin, null, this);
-		game.physics.arcade.overlap(this.player, this.enemy, this.loseCoin, null, this);
 
-		this.moveEnemy();
+		// player coleta moedas
+		for(var i = 0; i < this.coinManager.coins.length; i++){
+			var coin = this.coinManager.coins[i];
+			if(coin.active){
+				game.physics.arcade.overlap(this.player, coin, this.playerCollectCoin, null, this);
+			}
+		}
+
+		// goblins coletam moedas e perseguem player
+		for(var i = 0; i < this.enemies.length; i++){
+			this.goblinAIs[i].update(this.player, this.coinManager);
+
+			for(var j = 0; j < this.coinManager.coins.length; j++){
+				var coin = this.coinManager.coins[j];
+				if(coin.active){
+					game.physics.arcade.overlap(this.enemies[i], coin, this.goblinCollectCoin, null, this);
+				}
+			}
+
+			game.physics.arcade.overlap(this.player, this.enemies[i], this.loseCoin, null, this);
+		}
+
 		this.movePlayer();
 	},
 
@@ -212,6 +262,10 @@ var stage1State = {
 		this.player.body.velocity.x = 0;
 		this.player.body.velocity.y = 0;
 		this.player.animations.stop();
+
+		for(var i = 0; i < this.enemies.length; i++){
+			this.enemies[i].animations.stop();
+		}
 
 		if(this.music) this.music.pause();
 
@@ -455,86 +509,29 @@ var stage1State = {
 		}
 	},
 
-	moveEnemy: function(){
-		var tileSize = GameConfig.TILE_SIZE;
-		var enemyCol = Math.floor(this.enemy.x / tileSize);
-		var enemyRow = Math.floor(this.enemy.y / tileSize);
-		var centerX = enemyCol * tileSize + tileSize / 2;
-		var centerY = enemyRow * tileSize + tileSize / 2;
-		var speed = GameConfig.ENEMY_SPEED * game.time.physicsElapsed;
+	playerCollectCoin: function(player, coin){
+		var result = this.coinManager.collect(coin);
+		if(!result.collected) return;
 
-		if(!this.enemy.processedIntersection){
-			if(Math.abs(this.enemy.x - centerX) < speed + 1 && Math.abs(this.enemy.y - centerY) < speed + 1){
-				this.enemy.x = centerX;
-				this.enemy.y = centerY;
-				this.enemy.processedIntersection = true;
-
-				var validPath = [];
-
-				if(this.maze[enemyRow][enemyCol - 1] !== 1 && this.enemy.direction !== 'RIGHT'){
-					validPath.push('LEFT');
-				}
-				if(this.maze[enemyRow][enemyCol + 1] !== 1 && this.enemy.direction !== 'LEFT'){
-					validPath.push('RIGHT');
-				}
-				if(this.maze[enemyRow - 1] !== undefined && this.maze[enemyRow - 1][enemyCol] !== 1 && this.enemy.direction !== 'DOWN'){
-					validPath.push('UP');
-				}
-				if(this.maze[enemyRow + 1] !== undefined && this.maze[enemyRow + 1][enemyCol] !== 1 && this.enemy.direction !== 'UP'){
-					validPath.push('DOWN');
-				}
-
-				if(validPath.length > 0){
-					this.enemy.direction = validPath[Math.floor(Math.random() * validPath.length)];
-				} else {
-					switch(this.enemy.direction){
-						case 'LEFT': this.enemy.direction = 'RIGHT'; break;
-						case 'RIGHT': this.enemy.direction = 'LEFT'; break;
-						case 'UP': this.enemy.direction = 'DOWN'; break;
-						case 'DOWN': this.enemy.direction = 'UP'; break;
-					}
-				}
-			}
-		}
-
-		if(this.enemy.processedIntersection){
-			var dx = Math.abs(this.enemy.x - centerX);
-			var dy = Math.abs(this.enemy.y - centerY);
-			if(dx > tileSize * 0.4 || dy > tileSize * 0.4){
-				this.enemy.processedIntersection = false;
-			}
-		}
-
-		switch(this.enemy.direction){
-			case 'LEFT':
-				this.enemy.x -= speed;
-				this.enemy.animations.play('goLeft');
-				break;
-			case 'RIGHT':
-				this.enemy.x += speed;
-				this.enemy.animations.play('goRight');
-				break;
-			case 'UP':
-				this.enemy.y -= speed;
-				this.enemy.animations.play('goUp');
-				break;
-			case 'DOWN':
-				this.enemy.y += speed;
-				this.enemy.animations.play('goDown');
-				break;
-		}
-	},
-
-	getCoin: function(){
-		this.emitter.x = this.coin.position.x;
-		this.emitter.y = this.coin.position.y;
+		this.emitter.x = result.x;
+		this.emitter.y = result.y;
 		this.emitter.start(true, 2000, null, 20);
 
 		if(SettingsManager.get('sfx')) this.sndCoin.play();
 
 		this.coins++;
 		this.txtCoins.text = 'MOEDAS: ' + Utils.formatNumber(this.coins, 3);
-		this.coin.position = this.newPosition();
+	},
+
+	goblinCollectCoin: function(enemy, coin){
+		var result = this.coinManager.collect(coin);
+		if(!result.collected) return;
+
+		this.emitter.x = result.x;
+		this.emitter.y = result.y;
+		this.emitter.start(true, 2000, null, 20);
+
+		if(SettingsManager.get('sfx')) this.sndLoserCoin.play();
 	},
 
 	loseCoin: function(){
@@ -548,14 +545,6 @@ var stage1State = {
 		PlayerData.recordGame(this.coins, this.gameTime);
 
 		game.state.start('end', true, false, { score: this.coins, time: this.gameTime });
-	},
-
-	newPosition: function(){
-		var pos;
-		do {
-			pos = this.coinPositions[Math.floor(Math.random() * this.coinPositions.length)];
-		} while(this.coin.position && pos.x === this.coin.position.x && pos.y === this.coin.position.y);
-		return pos;
 	},
 
 	playTick: function(){
