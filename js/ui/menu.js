@@ -89,10 +89,18 @@ var menuState = {
 		this.menuCoin.visible = false;
 		this.coinBobTime = 0;
 
-		// controles
-		this.cursors = game.input.keyboard.createCursorKeys();
+		// controles de teclado (+ touch se mobile)
+		var cursorKeys = game.input.keyboard.createCursorKeys();
 		this.enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
 		this.escKey = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
+
+		if(GameConfig.isMobile){
+			this.cursors = TouchControls.wrapCursorKeys(cursorKeys);
+			this.enterKey = TouchControls.wrapKey(this.enterKey, 'enter');
+			this.escKey = TouchControls.wrapKey(this.escKey, 'escape');
+		} else {
+			this.cursors = cursorKeys;
+		}
 
 		// audio unlock
 		game.input.onDown.addOnce(function(){
@@ -106,6 +114,9 @@ var menuState = {
 	},
 
 	update: function(){
+		// atualizar controles touch antes de qualquer leitura de input
+		TouchControls.update();
+
 		// delega atualizacao para overlay de configuracoes quando aberto
 		if(SettingsOverlay.isOpen){
 			SettingsOverlay.update();

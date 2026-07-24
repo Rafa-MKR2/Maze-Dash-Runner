@@ -71,6 +71,9 @@ var PauseUI = {
 		this.pauseCoin.visible = false;
 
 		this.escKey2 = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
+		if(GameConfig.isMobile){
+			this.escKey2 = TouchControls.wrapKey(this.escKey2, 'escape');
+		}
 	},
 
 	createRestartConfirm: function(){

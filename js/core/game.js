@@ -8,4 +8,7 @@ game.state.add('credits', creditsState);
 game.state.add('stage1', stage1State);
 game.state.add('end', endState);
 
+// inicializar controles touch (so cria interface se mobile)
+TouchControls.create();
+
 game.state.start('boot');

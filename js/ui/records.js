@@ -53,6 +53,13 @@ var recordsState = {
 		escKey.onDown.addOnce(function(){
 			game.state.start('menu');
 		}, this);
+
+		// mobile: qualquer toque volta ao menu
+		if(GameConfig.isMobile){
+			game.input.onDown.addOnce(function(){
+				game.state.start('menu');
+			}, this);
+		}
 	},
 
 	update: function(){

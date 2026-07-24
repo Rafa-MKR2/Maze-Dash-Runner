@@ -45,10 +45,18 @@ var SettingsOverlay = {
 		// resolve bug: musica paused do pause nao reseta ao abrir settings
 		this.applyMusicState();
 
-		// controles de teclado
-		this.cursors = game.input.keyboard.createCursorKeys();
+		// controles de teclado (+ touch se mobile)
+		var cursorKeys = game.input.keyboard.createCursorKeys();
 		this.enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
 		this.escKey = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
+
+		if(GameConfig.isMobile){
+			this.cursors = TouchControls.wrapCursorKeys(cursorKeys);
+			this.enterKey = TouchControls.wrapKey(this.enterKey, 'enter');
+			this.escKey = TouchControls.wrapKey(this.escKey, 'escape');
+		} else {
+			this.cursors = cursorKeys;
+		}
 
 		this.isOpen = true;
 

@@ -49,6 +49,9 @@ var bootState = {
 		game.scale.pageAlignVertically = true;
 		game.antialias = false;
 
+		// suporte a multitouch (4 ponteiros simultaneos)
+		game.input.maxPointers = 4;
+
 		// aplicar fullscreen salvo (desktop apenas)
 		if(!GameConfig.isMobile && GameConfig.fullscreenEnabled){
 			SettingsManager.load();

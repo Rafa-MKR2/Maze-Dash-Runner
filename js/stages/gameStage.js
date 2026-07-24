@@ -105,6 +105,9 @@ var stage1State = {
 	// --- UPDATE ---
 
 	update: function(){
+		// atualizar controles touch antes de qualquer leitura de input
+		TouchControls.update();
+
 		// quando pausado, delega input para o PauseUI e retorna
 		if(PauseUI.isPaused){
 			PauseUI.update(PlayerController.controls);

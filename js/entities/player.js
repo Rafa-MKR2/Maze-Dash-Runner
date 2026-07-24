@@ -31,11 +31,20 @@ var PlayerController = {
 		this.sprite.animations.add('goRight', [24,25,26,27,28,29,30,31], 12, true);
 		this.sprite.lastDirection = null;
 
-		// controles de teclado
-		this.controls = game.input.keyboard.createCursorKeys();
+		// controles de teclado (+ touch se mobile)
+		var cursorKeys = game.input.keyboard.createCursorKeys();
 		this.enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
 		this.escKey = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
 		this.sprintKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
+		if(GameConfig.isMobile){
+			this.controls = TouchControls.wrapCursorKeys(cursorKeys);
+			this.enterKey = TouchControls.wrapKey(this.enterKey, 'enter');
+			this.escKey = TouchControls.wrapKey(this.escKey, 'escape');
+			this.sprintKey = TouchControls.wrapKey(this.sprintKey, 'space');
+		} else {
+			this.controls = cursorKeys;
+		}
 
 		// inicializar estamina
 		this.maxStamina = GameConfig.STAMINA_MAX;
