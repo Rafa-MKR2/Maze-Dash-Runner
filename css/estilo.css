@@ -16,9 +16,16 @@ html, body {
 	-user-select: none;
 }
 
+/* centralizar canvas usando flexbox */
+body {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
 canvas {
 	display: block;
-	margin: 0 auto;
+	margin: 0;
 	image-rendering: pixelated;
 	image-rendering: crisp-edges;
 }

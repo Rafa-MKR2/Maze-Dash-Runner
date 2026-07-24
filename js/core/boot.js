@@ -43,8 +43,8 @@ var bootState = {
 			game.scale.maxHeight = window.innerHeight - 60;
 		}
 
-		game.scale.pageAlignHorizontally = true;
-		game.scale.pageAlignVertically = true;
+		game.scale.pageAlignHorizontally = false;
+		game.scale.pageAlignVertically = false;
 		game.antialias = false;
 
 		// suporte a multitouch (4 ponteiros simultaneos)

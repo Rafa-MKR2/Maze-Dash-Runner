@@ -16,6 +16,11 @@ var TouchControls = {
 	// --- CONTROLE DE BORDA ---
 	_pauseHeld: false,
 
+	// --- JOYSTICK TRACKING ---
+	// Pointer ID que esta controlando o joystick.
+	// Enquanto este pointer estiver ativo, as direcoes persistem.
+	_joystickPointerId: null,
+
 	// --- ELEMENTOS VISUAIS ---
 	group: null,
 	_joystickPad: null,
@@ -27,14 +32,15 @@ var TouchControls = {
 	buttonPause: null,
 
 	// --- CONFIGURACAO ---
-	JOYSTICK_TOUCH_RADIUS: 55,
+	JOYSTICK_TOUCH_RADIUS: 75,
+	JOYSTICK_MAX_DRAG: 40,
 	PADDING: 30,
 
-	// escala dos sprites
-	PAD_SCALE: 0.65,
-	NUB_SCALE: 0.65,
-	BTN_SCALE: 0.75,
-	PAUSE_SCALE: 0.7,
+	// escala dos sprites (botões maiores)
+	PAD_SCALE: 0.85,
+	NUB_SCALE: 0.85,
+	BTN_SCALE: 1.0,
+	PAUSE_SCALE: 0.9,
 
 	active: false,
 
@@ -72,6 +78,7 @@ var TouchControls = {
 			this.group.fixedToCamera = true;
 			this._createJoystick();
 			this._createButtons();
+			this._joystickPointerId = null;
 		}
 
 		// garantir controles no topo da lista de renderizacao
@@ -79,11 +86,7 @@ var TouchControls = {
 			game.world.bringToTop(this.group);
 		}
 
-		// resetar estados
-		this._up = false;
-		this._down = false;
-		this._left = false;
-		this._right = false;
+		// resetar apenas estados de botoes (joystick e tratado separadamente)
 		this._enter = false;
 		this._escape = false;
 		this._space = false;
@@ -115,12 +118,12 @@ var TouchControls = {
 	},
 
 	// ============================================================
-	// JOYSTICK (sprites)
+	// JOYSTICK (sprites + pointer tracking)
 	// ============================================================
 
 	_createJoystick: function(){
-		var x = this.PADDING + 64;
-		var y = game.height - this.PADDING - 64;
+		var x = this.PADDING + 70;
+		var y = game.height - this.PADDING - 70;
 		this._joystickCenter = { x: x, y: y };
 
 		// pad (base) - sprite 128x128
@@ -146,37 +149,67 @@ var TouchControls = {
 			game.input.pointer4
 		];
 
-		var joystickClaimed = false;
+		var joystickFound = false;
 		var pauseTouched = false;
 
 		for(var i = 0; i < pointers.length; i++){
 			var p = pointers[i];
-			if(!p || !p.active || !p.isDown) continue;
+			if(!p || !p.active) continue;
 
-			var px = p.x;
-			var py = p.y;
-
-			if(!joystickClaimed && this._isInJoystickArea(px, py)){
-				this._processJoystick(px, py);
-				joystickClaimed = true;
+			// pointer controlando joystick e ainda pressionado?
+			if(this._joystickPointerId !== null && p.id === this._joystickPointerId){
+				if(p.isDown){
+					this._processJoystick(p.x, p.y);
+					joystickFound = true;
+				} else {
+					// soltou o dedo - liberar joystick
+					this._joystickPointerId = null;
+					this._up = false;
+					this._down = false;
+					this._left = false;
+					this._right = false;
+				}
+				continue;
 			}
 
-			if(this._isInButton(px, py, this.buttonA)){
+			if(!p.isDown) continue;
+
+			// novo toque na area do joystick? Reivindicar
+			if(!joystickFound && this._joystickPointerId === null){
+				if(this._isInJoystickArea(p.x, p.y)){
+					this._joystickPointerId = p.id;
+					this._processJoystick(p.x, p.y);
+					joystickFound = true;
+					continue;
+				}
+			}
+
+			// botoes de acao
+			if(this._isInButton(p.x, p.y, this.buttonA)){
 				this._space = true;
 				this._enter = true;
 			}
 
 			// botao B: reservado para interacoes futuras
-			if(this._isInButton(px, py, this.buttonB)){
+			if(this._isInButton(p.x, p.y, this.buttonB)){
 				// nenhuma acao no momento
 			}
 
-			if(this._isInButton(px, py, this.buttonPause)){
+			if(this._isInButton(p.x, p.y, this.buttonPause)){
 				pauseTouched = true;
 				if(!this._pauseHeld){
 					this._escape = true;
 				}
 			}
+		}
+
+		// pointer que controlava joystick nao esta mais na lista
+		if(!joystickFound && this._joystickPointerId !== null){
+			this._joystickPointerId = null;
+			this._up = false;
+			this._down = false;
+			this._left = false;
+			this._right = false;
 		}
 
 		this._pauseHeld = pauseTouched;
@@ -193,62 +226,68 @@ var TouchControls = {
 		var dy = py - this._joystickCenter.y;
 		var dist = Math.sqrt(dx * dx + dy * dy);
 
-		if(dist < 10) return;
-
-		// limitar nub ao raio visual
-		var maxDist = 35;
+		// atualizar visual do nub (sempre)
+		var maxDrag = this.JOYSTICK_MAX_DRAG;
 		var thumbDx = dx;
 		var thumbDy = dy;
-		if(dist > maxDist){
-			thumbDx = dx / dist * maxDist;
-			thumbDy = dy / dist * maxDist;
+		if(dist > maxDrag){
+			thumbDx = dx / dist * maxDrag;
+			thumbDy = dy / dist * maxDrag;
 		}
 		this._joystickThumbOffset = { x: thumbDx, y: thumbDy };
 
-		// detectar direcoes
+		// deadzone minima para registrar direcao
+		if(dist < 10) return;
+
+		// detectar direcoes (sobrepoe ao inves de somar)
+		this._up = false;
+		this._down = false;
+		this._left = false;
+		this._right = false;
+
 		if(Math.abs(dx) > 10){
-			this._right = dx > 0;
-			this._left = dx < 0;
+			if(dx > 0) this._right = true;
+			else this._left = true;
 		}
 		if(Math.abs(dy) > 10){
-			this._down = dy > 0;
-			this._up = dy < 0;
+			if(dy > 0) this._down = true;
+			else this._up = true;
 		}
 	},
 
 	// ============================================================
-	// BOTOES (sprites)
+	// BOTOES (sprites + labels)
 	// ============================================================
 
 	_createButtons: function(){
-		var cw = 64 * this.BTN_SCALE;
-		var ch = 64 * this.BTN_SCALE;
-		var pw = 128 * this.PAUSE_SCALE;
-		var ph = 64 * this.PAUSE_SCALE;
+		var sw = 64 * this.BTN_SCALE;
+		var sh = 64 * this.BTN_SCALE;
+		var ww = 128 * this.PAUSE_SCALE;
+		var wh = 64 * this.PAUSE_SCALE;
 
-		// botao A (circle): canto inferior direito
+		// botao A (circle): canto inferior direito, mais para cima
 		this.buttonA = this._createButton(
-			game.width - this.PADDING - cw / 2 - 10,
-			game.height - this.PADDING - ch - 25,
-			'btn_circle', this.BTN_SCALE
+			game.width - this.PADDING - sw / 2 - 5,
+			game.height - this.PADDING - sh - 35,
+			'btn_circle', this.BTN_SCALE, 'A'
 		);
 
-		// botao B (square): abaixo e a esquerda do A
+		// botao B (square): abaixo e a esquerda do A, com mais espaco
 		this.buttonB = this._createButton(
-			game.width - this.PADDING - cw - 25,
-			game.height - this.PADDING - ch / 2 - 10,
-			'btn_square', this.BTN_SCALE
+			game.width - this.PADDING - sw - 55,
+			game.height - this.PADDING - sh / 2 + 5,
+			'btn_square', this.BTN_SCALE, 'B'
 		);
 
 		// botao pause (wide circle): centro inferior
 		this.buttonPause = this._createButton(
 			game.width / 2,
-			game.height - this.PADDING - ph / 2 + 5,
-			'btn_wide', this.PAUSE_SCALE
+			game.height - this.PADDING - wh / 2,
+			'btn_wide', this.PAUSE_SCALE, 'START'
 		);
 	},
 
-	_createButton: function(x, y, key, scale){
+	_createButton: function(x, y, key, scale, label){
 		var spr = game.add.sprite(x, y, key, null, this.group);
 		spr.anchor.set(0.5);
 		spr.scale.set(scale);
@@ -260,14 +299,25 @@ var TouchControls = {
 		var hh = spr.height / 2;
 		var radius = Math.max(hw, hh);
 
-		return { sprite: spr, x: x, y: y, radius: radius };
+		// label de texto no centro do botao
+		var txt = null;
+		if(label){
+			var fontSize = (key === 'btn_wide') ? '10px' : '14px';
+			txt = game.add.text(x, y, label, {
+				font: fontSize + ' emulogic',
+				fill: '#fff'
+			}, this.group);
+			txt.anchor.set(0.5);
+		}
+
+		return { sprite: spr, label: txt, x: x, y: y, radius: radius };
 	},
 
 	_isInButton: function(px, py, button){
 		if(!button) return false;
 		var dx = px - button.x;
 		var dy = py - button.y;
-		return Math.sqrt(dx * dx + dy * dy) <= button.radius + 10;
+		return Math.sqrt(dx * dx + dy * dy) <= button.radius + 15;
 	},
 
 	// ============================================================
