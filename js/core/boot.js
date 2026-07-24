@@ -31,16 +31,13 @@ var bootState = {
 		}
 
 		// configurar escala conforme dispositivo
-		game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-
 		if(GameConfig.isMobile){
-			// mobile: ocupar toda a tela sem margens
-			game.scale.maxWidth = window.innerWidth;
-			game.scale.maxHeight = window.innerHeight;
-			game.scale.minWidth = window.innerWidth;
-			game.scale.minHeight = window.innerHeight;
+			// mobile: RESIZE preenche toda a tela
+			game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+			game.scale.forceLandscape = true;
 		} else {
-			// desktop: manter margens para caber na janela
+			// desktop: SHOW_ALL mantem proporcao com margens
+			game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 			game.scale.maxWidth = window.innerWidth - 60;
 			game.scale.maxHeight = window.innerHeight - 60;
 		}
