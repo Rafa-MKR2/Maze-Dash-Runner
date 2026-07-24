@@ -111,6 +111,10 @@ var stage1State = {
 		this.movePlayer();
 	},
 
+	shutdown: function(){
+		this.music.stop();
+	},
+
 	loseCoin: function(){
 		this.sndLoserCoin.play();
 

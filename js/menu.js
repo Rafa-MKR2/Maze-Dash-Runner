@@ -24,6 +24,10 @@ var menuState = {
 		}, this);
 	},
 
+	shutdown: function(){
+		this.music.stop();
+	},
+
 	startGame: function(){
 		this.music.stop();
 		game.state.start('stage1');
