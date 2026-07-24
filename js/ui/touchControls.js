@@ -32,17 +32,17 @@ var TouchControls = {
 	buttonPause: null,
 
 	// --- CONFIGURACAO ---
-	JOYSTICK_TOUCH_RADIUS: 80,
-	JOYSTICK_MAX_DRAG: 32,
-	JOYSTICK_DEADZONE: 6,
+	JOYSTICK_TOUCH_RADIUS: 115,
+	JOYSTICK_MAX_DRAG: 60,
+	JOYSTICK_DEADZONE: 8,
 	JOYSTICK_AXIS_MIN: 8,
 	PADDING: 30,
 
-	// escala dos sprites (dobrados)
-	PAD_SCALE: 0.85,
-	NUB_SCALE: 0.85,
-	BTN_SCALE: 2.0,
-	PAUSE_SCALE: 2.0,
+	// escala dos sprites
+	PAD_SCALE: 1.7,
+	NUB_SCALE: 1.7,
+	BTN_SCALE: 1.5,
+	PAUSE_SCALE: 1.5,
 
 	active: false,
 
@@ -124,8 +124,8 @@ var TouchControls = {
 	// ============================================================
 
 	_createJoystick: function(){
-		var x = this.PADDING + 70;
-		var y = game.height - this.PADDING - 70;
+		var x = this.PADDING + 115;
+		var y = game.height - this.PADDING - 115;
 		this._joystickCenter = { x: x, y: y };
 
 		// pad (base) - sprite 128x128
