@@ -1,0 +1,12 @@
+{
+  "name": "maze-dash-runner",
+  "version": "1.0.0",
+  "description": "Maze Dash Runner - Jogo de labirinto com Phaser.js",
+  "scripts": {
+    "dev": "live-server --port=3000 --open=index.html"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  },
+  "license": "MIT"
+}
