@@ -45,7 +45,6 @@ var bootState = {
 
 		game.scale.pageAlignHorizontally = true;
 		game.scale.pageAlignVertically = true;
-		game.scale.setScreenSize(true);
 		game.antialias = false;
 
 		// suporte a multitouch (4 ponteiros simultaneos)
