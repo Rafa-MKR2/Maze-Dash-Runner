@@ -32,8 +32,10 @@ var TouchControls = {
 	buttonPause: null,
 
 	// --- CONFIGURACAO ---
-	JOYSTICK_TOUCH_RADIUS: 75,
-	JOYSTICK_MAX_DRAG: 40,
+	JOYSTICK_TOUCH_RADIUS: 80,
+	JOYSTICK_MAX_DRAG: 32,
+	JOYSTICK_DEADZONE: 6,
+	JOYSTICK_AXIS_MIN: 8,
 	PADDING: 30,
 
 	// escala dos sprites (botões maiores)
@@ -236,21 +238,31 @@ var TouchControls = {
 		}
 		this._joystickThumbOffset = { x: thumbDx, y: thumbDy };
 
-		// deadzone minima para registrar direcao
-		if(dist < 10) return;
+		// deadzone global - nao registrar nada se muito perto do centro
+		if(dist < this.JOYSTICK_DEADZONE) return;
 
-		// detectar direcoes (sobrepoe ao inves de somar)
+		// detectar direcoes usando threshold proporcional ao angulo.
+		// Ao inves de exigir |dx| > 10 fixo, usa a razao entre
+		// o componente do eixo e a distancia total. Isso permite
+		// que diagonais registrem mesmo quando um eixo e menor.
 		this._up = false;
 		this._down = false;
 		this._left = false;
 		this._right = false;
 
-		if(Math.abs(dx) > 10){
-			if(dx > 0) this._right = true;
+		// normalizar componentes (0 a 1 em relacao a dist)
+		var nx = dx / dist;
+		var ny = dy / dist;
+
+		// eixo X: registrar se o componente normalizado for significativo
+		if(Math.abs(nx) > 0.3){
+			if(nx > 0) this._right = true;
 			else this._left = true;
 		}
-		if(Math.abs(dy) > 10){
-			if(dy > 0) this._down = true;
+
+		// eixo Y: registrar se o componente normalizado for significativo
+		if(Math.abs(ny) > 0.3){
+			if(ny > 0) this._down = true;
 			else this._up = true;
 		}
 	},
@@ -265,18 +277,18 @@ var TouchControls = {
 		var ww = 128 * this.PAUSE_SCALE;
 		var wh = 64 * this.PAUSE_SCALE;
 
-		// botao A (circle): canto inferior direito, mais para cima
-		this.buttonA = this._createButton(
+		// botao B (square): canto inferior direito
+		this.buttonB = this._createButton(
 			game.width - this.PADDING - sw / 2 - 5,
 			game.height - this.PADDING - sh - 35,
-			'btn_circle', this.BTN_SCALE, 'A'
+			'btn_square', this.BTN_SCALE, 'B'
 		);
 
-		// botao B (square): abaixo e a esquerda do A, com mais espaco
-		this.buttonB = this._createButton(
+		// botao A (circle): a esquerda do B, mais para baixo
+		this.buttonA = this._createButton(
 			game.width - this.PADDING - sw - 55,
 			game.height - this.PADDING - sh / 2 + 5,
-			'btn_square', this.BTN_SCALE, 'B'
+			'btn_circle', this.BTN_SCALE, 'A'
 		);
 
 		// botao pause (wide circle): centro inferior
