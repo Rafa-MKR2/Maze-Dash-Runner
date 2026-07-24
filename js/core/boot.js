@@ -52,6 +52,9 @@ var bootState = {
 		// suporte a multitouch (4 ponteiros simultaneos)
 		game.input.maxPointers = 4;
 
+		// inicializar controles touch (só após detectar isMobile)
+		TouchControls.create();
+
 		// aplicar fullscreen salvo (desktop apenas)
 		if(!GameConfig.isMobile && GameConfig.fullscreenEnabled){
 			SettingsManager.load();
