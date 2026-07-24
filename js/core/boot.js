@@ -31,19 +31,21 @@ var bootState = {
 		}
 
 		// configurar escala conforme dispositivo
+		game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+
 		if(GameConfig.isMobile){
-			// mobile: RESIZE preenche toda a tela
-			game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
-			game.scale.forceLandscape = true;
+			// mobile: ocupar tela inteira sem margens
+			game.scale.maxWidth = window.innerWidth;
+			game.scale.maxHeight = window.innerHeight;
 		} else {
-			// desktop: SHOW_ALL mantem proporcao com margens
-			game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+			// desktop: margens para caber na janela
 			game.scale.maxWidth = window.innerWidth - 60;
 			game.scale.maxHeight = window.innerHeight - 60;
 		}
 
 		game.scale.pageAlignHorizontally = true;
 		game.scale.pageAlignVertically = true;
+		game.scale.setScreenSize(true);
 		game.antialias = false;
 
 		// suporte a multitouch (4 ponteiros simultaneos)

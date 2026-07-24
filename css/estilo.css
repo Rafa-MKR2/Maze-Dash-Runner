@@ -18,11 +18,12 @@ html, body {
 
 canvas {
 	display: block;
+	margin: 0 auto;
 	image-rendering: pixelated;
 	image-rendering: crisp-edges;
 }
 
-/* fullscreen: canvas ocupa toda a tela */
+/* fullscreen */
 :-webkit-full-screen canvas { width: 100% !important; height: 100% !important; }
 :-moz-full-screen canvas { width: 100% !important; height: 100% !important; }
 :fullscreen canvas { width: 100% !important; height: 100% !important; }
