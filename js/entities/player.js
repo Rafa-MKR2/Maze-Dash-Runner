@@ -1,11 +1,18 @@
-// PlayerController - responsavel pela criacao e movimentacao do player.
-// Centraliza sprite, animacoes e input. A Stage apenas chama create e update.
+// PlayerController - responsavel pela criacao, movimentacao e sprint do player.
+// Centraliza sprite, animacoes, input e estamina. A Stage apenas chama create e update.
 var PlayerController = {
 
 	sprite: null,
 	controls: null,
 	enterKey: null,
 	escKey: null,
+	sprintKey: null,
+
+	// estamina
+	stamina: 0,
+	maxStamina: 0,
+	isSprinting: false,
+	recoveryTimer: 0,
 
 	// cria o player na posicao indicada e configura animacoes
 	create: function(spawnX, spawnY){
@@ -13,48 +20,83 @@ var PlayerController = {
 		this.sprite.anchor.set(.5);
 		game.physics.arcade.enable(this.sprite);
 
+		// hitbox reduzido: foco nos pes do personagem
+		// sprite tem 24x32 com anchor 0.5
+		// body cobre apenas a parte inferior (pes) para colisao mais natural
+		this.sprite.body.setSize(16, 18, 4, 14);
+
 		this.sprite.animations.add('goDown', [0,1,2,3,4,5,6,7], 12, true);
 		this.sprite.animations.add('goUp', [8,9,10,11,12,13,14,15], 12, true);
 		this.sprite.animations.add('goLeft', [16,17,18,19,20,21,22,23], 12, true);
 		this.sprite.animations.add('goRight', [24,25,26,27,28,29,30,31], 12, true);
 		this.sprite.lastDirection = null;
 
-		// controles de teclado usados pela gameplay e pela pausa
+		// controles de teclado
 		this.controls = game.input.keyboard.createCursorKeys();
 		this.enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
 		this.escKey = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
+		this.sprintKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
+		// inicializar estamina
+		this.maxStamina = GameConfig.STAMINA_MAX;
+		this.stamina = this.maxStamina;
+		this.isSprinting = false;
 
 		return this.sprite;
 	},
 
-	// processa input do teclado e move o player
-	// limita a dois eixos: se ambos pressionados, usa o ultimo registrado
+	// processa input, movimentacao, sprint e estamina
 	update: function(){
 		var s = this.sprite;
 		s.body.velocity.x = 0;
 		s.body.velocity.y = 0;
 
+		// --- SPRINT ---
+		var moving = this.controls.left.isDown || this.controls.right.isDown ||
+		             this.controls.up.isDown || this.controls.down.isDown;
+
+		this.isSprinting = false;
+		if(moving && this.sprintKey.isDown && this.stamina > 0){
+			this.isSprinting = true;
+			this.recoveryTimer = GameConfig.STAMINA_RECOVERY_DELAY;
+			this.stamina -= GameConfig.STAMINA_DRAIN * game.time.physicsElapsed;
+			if(this.stamina < 0) this.stamina = 0;
+		} else
+		if(this.stamina < this.maxStamina){
+			// aguardar delay antes de comecar a recuperar
+			if(this.recoveryTimer > 0){
+				this.recoveryTimer -= game.time.physicsElapsed;
+			} else {
+				this.stamina += GameConfig.STAMINA_RECOVERY * game.time.physicsElapsed;
+				if(this.stamina > this.maxStamina) this.stamina = this.maxStamina;
+			}
+		}
+
+		var speed = this.isSprinting ? GameConfig.SPRINT_SPEED : GameConfig.PLAYER_SPEED;
+
+		// --- MOVIMENTACAO ---
 		var movingX = false;
 		var movingY = false;
 
 		if(this.controls.left.isDown && !this.controls.right.isDown){
-			s.body.velocity.x = -GameConfig.PLAYER_SPEED;
+			s.body.velocity.x = -speed;
 			movingX = true;
 		} else
 		if(this.controls.right.isDown && !this.controls.left.isDown){
-			s.body.velocity.x = GameConfig.PLAYER_SPEED;
+			s.body.velocity.x = speed;
 			movingX = true;
 		}
 
 		if(this.controls.up.isDown && !this.controls.down.isDown){
-			s.body.velocity.y = -GameConfig.PLAYER_SPEED;
+			s.body.velocity.y = -speed;
 			movingY = true;
 		} else
 		if(this.controls.down.isDown && !this.controls.up.isDown){
-			s.body.velocity.y = GameConfig.PLAYER_SPEED;
+			s.body.velocity.y = speed;
 			movingY = true;
 		}
 
+		// limitar a dois eixos: se ambos pressionados, usa o ultimo registrado
 		if(movingX && movingY){
 			if(s.lastDirection === 'x'){
 				s.body.velocity.y = 0;

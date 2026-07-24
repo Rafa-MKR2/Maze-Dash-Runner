@@ -18,6 +18,14 @@ var Utils = {
 		var str = value.toString();
 		while(str.length < digits) str = '0' + str;
 		return str;
+	},
+
+	// detecta se o dispositivo e mobile (tablet ou celular)
+	isMobileDevice: function(){
+		var ua = navigator.userAgent;
+		if(/android|iphone|ipad|ipod|mobile|tablet/i.test(ua)) return true;
+		if('ontouchstart' in window && navigator.maxTouchPoints > 0) return true;
+		return false;
 	}
 
 };

@@ -1,7 +1,23 @@
-var settingsUIState = {
+// SettingsOverlay - painel de configuracoes reutilizavel.
+// Usado tanto pelo Menu Principal quanto pelo Menu de Pausa.
+// Nao e um Phaser state - e um overlay manual que funciona sobre qualquer cena.
+var SettingsOverlay = {
 
+	isOpen: false,
 	selectedIndex: 0,
 	inputReady: false,
+	returnState: 'menu',
+	onClose: null,
+
+	// referencias de UI
+	group: null,
+	labels: [],
+	values: [],
+	menuCoin: null,
+	coinBobTime: 0,
+	cursors: null,
+	enterKey: null,
+	escKey: null,
 
 	options: [
 		{ label: 'MUSICA',     type: 'toggle', key: 'music' },
@@ -11,15 +27,59 @@ var settingsUIState = {
 		{ label: 'VOLTAR',     type: 'action', key: 'back' }
 	],
 
-	create: function(){
-		SettingsManager.load();
+	// abre o overlay
+	// config: { returnState, onClose }
+	// returnState: para onde voltar ao fechar (default: 'menu')
+	// onClose: callback opcional chamado ao fechar
+	open: function(config){
+		config = config || {};
+		this.returnState = config.returnState || 'menu';
+		this.onClose = config.onClose || null;
 		this.selectedIndex = 0;
 		this.inputReady = false;
+
+		SettingsManager.load();
+		this.buildUI();
+
+		// sincronizar estado da musica ao abrir
+		// resolve bug: musica paused do pause nao reseta ao abrir settings
+		this.applyMusicState();
+
+		// controles de teclado
+		this.cursors = game.input.keyboard.createCursorKeys();
+		this.enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
+		this.escKey = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
+
+		this.isOpen = true;
+
+		// liberar input apos breve delay
+		game.time.events.add(300, function(){
+			this.inputReady = true;
+		}, this);
+	},
+
+	// constroi toda a interface visual do overlay
+	// em mobile, oculta opcao de tela cheia (sempre fullscreens)
+	buildUI: function(){
+		this.group = game.add.group();
+
+		// filtrar opcoes visiveis conforme dispositivo
+		this.visibleOptions = [];
+		for(var i = 0; i < this.options.length; i++){
+			if(this.options[i].key === 'fullscreen' && GameConfig.isMobile) continue;
+			this.visibleOptions.push(this.options[i]);
+		}
+
+		// fundo escuro semitransparente
+		var bg = game.add.graphics(0, 0, this.group);
+		bg.beginFill(0x000000, 0.7);
+		bg.drawRect(0, 0, game.width, game.height);
+		bg.endFill();
 
 		// titulo
 		game.add.text(game.world.centerX, 60, 'CONFIGURACOES', {
 			font: '36px emulogic', fill: '#fff'
-		}).anchor.set(.5);
+		}, this.group).anchor.set(.5);
 
 		// linhas de opcao
 		this.labels = [];
@@ -27,25 +87,25 @@ var settingsUIState = {
 		var startY = 150;
 		var spacing = 50;
 
-		for(var i = 0; i < this.options.length; i++){
-			var opt = this.options[i];
+		for(var i = 0; i < this.visibleOptions.length; i++){
+			var opt = this.visibleOptions[i];
 
 			var lbl = game.add.text(game.world.centerX - 180, startY + i * spacing, opt.label, {
 				font: '20px emulogic', fill: '#fff'
-			});
+			}, this.group);
 			lbl.anchor.set(0, 0.5);
 			this.labels.push(lbl);
 
 			var valText = this.getValueText(opt);
 			var val = game.add.text(game.world.centerX + 180, startY + i * spacing, valText, {
 				font: '20px emulogic', fill: '#fff'
-			});
+			}, this.group);
 			val.anchor.set(1, 0.5);
 			this.values.push(val);
 		}
 
 		// moeda indicadora de selecao
-		this.menuCoin = game.add.sprite(0, 0, 'coin');
+		this.menuCoin = game.add.sprite(0, 0, 'coin', null, this.group);
 		this.menuCoin.anchor.set(.5);
 		this.menuCoin.scale.set(1.1);
 		this.menuCoin.smoothed = false;
@@ -53,17 +113,9 @@ var settingsUIState = {
 		this.coinBobTime = 0;
 
 		this.updateCoinPosition();
-
-		// controles
-		this.cursors = game.input.keyboard.createCursorKeys();
-		this.enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
-		this.escKey = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
-
-		game.time.events.add(300, function(){
-			this.inputReady = true;
-		}, this);
 	},
 
+	// retorna o texto exibido para cada tipo de opcao
 	getValueText: function(opt){
 		if(opt.type === 'toggle'){
 			return SettingsManager.get(opt.key) ? '[ON]' : '[OFF]';
@@ -78,60 +130,98 @@ var settingsUIState = {
 			str += ']';
 			return str;
 		}
-		if(opt.type === 'action'){
-			return '';
-		}
 		return '';
 	},
 
+	// atualiza todos os textos de valor
 	updateValues: function(){
-		for(var i = 0; i < this.options.length; i++){
-			this.values[i].text = this.getValueText(this.options[i]);
+		for(var i = 0; i < this.visibleOptions.length; i++){
+			this.values[i].text = this.getValueText(this.visibleOptions[i]);
 		}
 	},
 
+	// atualiza posicao da moeda indicadora
+	updateCoinPosition: function(){
+		var target = this.labels[this.selectedIndex];
+		this.menuCoin.x = target.x - 25;
+		this.menuCoin.y = target.y;
+		this.coinBobTime = 0;
+		this.menuCoin.visible = true;
+	},
+
+	// fecha o overlay e chama callback
+	close: function(){
+		if(this.group){
+			this.group.destroy(true);
+			this.group = null;
+		}
+		this.labels = [];
+		this.values = [];
+		this.menuCoin = null;
+		this.isOpen = false;
+
+		// executar callback antes de navegar
+		if(this.onClose){
+			this.onClose();
+			this.onClose = null;
+		}
+
+		// desabilitar input do pause menu por 300ms para evitar
+		// que o mesmo ESC que fechou o overlay tambem feche a pausa
+		if(typeof PauseUI !== 'undefined'){
+			PauseUI.inputReady = false;
+			game.time.events.add(300, function(){
+				PauseUI.inputReady = true;
+			});
+		}
+	},
+
+	// chamado a cada frame pela cena que esta ativa
 	update: function(){
+		if(!this.isOpen || !this.inputReady) return;
+
 		// bobbing da moeda indicadora
-		if(this.menuCoin.visible){
+		if(this.menuCoin && this.menuCoin.visible){
 			this.coinBobTime += game.time.physicsElapsed * 4;
 			var target = this.labels[this.selectedIndex];
 			this.menuCoin.y = target.y + Math.sin(this.coinBobTime) * 3;
 		}
 
-		if(!this.inputReady) return;
-
+		// navegacao vertical
 		if(this.cursors.up.isDown && !this.cursors.down.isDown){
-			this.selectedIndex = (this.selectedIndex - 1 + this.options.length) % this.options.length;
+			this.selectedIndex = (this.selectedIndex - 1 + this.visibleOptions.length) % this.visibleOptions.length;
 			this.updateCoinPosition();
-			this.playTick();
+			AudioManager.playTick();
 			Utils.debounce(this);
 		} else
 		if(this.cursors.down.isDown && !this.cursors.up.isDown){
-			this.selectedIndex = (this.selectedIndex + 1) % this.options.length;
+			this.selectedIndex = (this.selectedIndex + 1) % this.visibleOptions.length;
 			this.updateCoinPosition();
-			this.playTick();
+			AudioManager.playTick();
 			Utils.debounce(this);
 		}
 
-		var opt = this.options[this.selectedIndex];
+		var opt = this.visibleOptions[this.selectedIndex];
 
+		// toggle: esquerda/direita
 		if(opt.type === 'toggle'){
 			if(this.cursors.left.isDown){
 				SettingsManager.set(opt.key, false);
 				this.updateValues();
-				this.applyMusicState();
-				this.playTick();
+				this.applyToggleEffect(opt.key);
+				AudioManager.playTick();
 				Utils.debounce(this);
 			} else
 			if(this.cursors.right.isDown){
 				SettingsManager.set(opt.key, true);
 				this.updateValues();
-				this.applyMusicState();
-				this.playTick();
+				this.applyToggleEffect(opt.key);
+				AudioManager.playTick();
 				Utils.debounce(this);
 			}
 		}
 
+		// slider: esquerda/direita
 		if(opt.type === 'slider'){
 			if(this.cursors.left.isDown){
 				var vol = SettingsManager.get('volume');
@@ -151,53 +241,101 @@ var settingsUIState = {
 			}
 		}
 
+		// acao: voltar
 		if(opt.type === 'action' && opt.key === 'back'){
-			if(this.enterKey.isDown || this.escKey.isDown){
-				game.state.start('menu');
+			if(this.enterKey.isDown){
+				AudioManager.playTick();
+				this.close();
 				Utils.debounce(this, 500);
+				return;
 			}
 		}
 
-		if(this.escKey.isDown && opt.key !== 'back'){
-			game.state.start('menu');
+		// ESC em qualquer opcao fecha o overlay
+		if(this.escKey.isDown){
+			AudioManager.playTick();
+			this.close();
 			Utils.debounce(this, 500);
 		}
 	},
 
-	updateCoinPosition: function(){
-		var target = this.labels[this.selectedIndex];
-		this.menuCoin.x = target.x - 25;
-		this.menuCoin.y = target.y;
-		this.coinBobTime = 0;
-		this.menuCoin.visible = true;
-	},
-
-	playTick: function(){
-		if(!SettingsManager.get('sfx')) return;
-		var tick = game.add.audio('getitem');
-		tick.volume = 0.2;
-		tick.play();
-	},
-
+	// aplica volume da musica em tempo real
+	// ajusta menu e/ou fase conforme contexto atual
 	applyMusicVolume: function(){
+		var vol = SettingsManager.get('volume') / 100 * 0.5;
+
 		if(window._menuMusic && window._menuMusic.isPlaying){
-			window._menuMusic.volume = SettingsManager.get('volume') / 100 * 0.5;
+			window._menuMusic.volume = vol;
+		}
+
+		// durante gameplay, ajustar musica da fase tambem
+		if(this.onClose && AudioManager.music && AudioManager.music.isPlaying){
+			AudioManager.music.volume = vol;
 		}
 	},
 
+	// liga ou desliga musica conforme configuracao
+	// durante gameplay (onClose definido) controla a musica da fase
+	// no menu controla a musica do menu
 	applyMusicState: function(){
-		if(SettingsManager.get('music')){
+		var musicOn = SettingsManager.get('music');
+		var vol = SettingsManager.get('volume') / 100 * 0.5;
+
+		if(this.onClose){
+			// contexto de gameplay: controlar AudioManager.music
+			if(musicOn){
+				if(AudioManager.music && !AudioManager.music.isPlaying){
+					AudioManager.music.volume = vol;
+					AudioManager.music.resume();
+				}
+			} else {
+				if(AudioManager.music && AudioManager.music.isPlaying){
+					AudioManager.music.pause();
+				}
+			}
+			return;
+		}
+
+		// contexto de menu: controlar window._menuMusic
+		if(musicOn){
 			if(!window._menuMusic){
 				window._menuMusic = game.add.audio('music');
 				window._menuMusic.loop = true;
 			}
-			window._menuMusic.volume = SettingsManager.get('volume') / 100 * 0.5;
+			window._menuMusic.volume = vol;
 			if(!window._menuMusic.isPlaying){
 				window._menuMusic.play();
 			}
 		} else {
 			if(window._menuMusic && window._menuMusic.isPlaying){
 				window._menuMusic.stop();
+			}
+		}
+	},
+
+	// roda o efeito correto ao alterar um toggle
+	applyToggleEffect: function(key){
+		if(key === 'music'){
+			this.applyMusicState();
+		} else
+		if(key === 'fullscreen'){
+			this.applyFullscreen();
+		}
+	},
+
+	// aplica fullscreen conforme configuracao
+	// so funciona em desktop (mobile sempre fullscreen)
+	applyFullscreen: function(){
+		if(GameConfig.isMobile) return;
+		if(!GameConfig.fullscreenEnabled) return;
+
+		if(SettingsManager.get('fullscreen')){
+			if(!GameConfig.fullscreenElement()){
+				GameConfig.requestFullscreen();
+			}
+		} else {
+			if(GameConfig.fullscreenElement()){
+				GameConfig.exitFullscreen();
 			}
 		}
 	}

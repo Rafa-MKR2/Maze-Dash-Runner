@@ -8,8 +8,8 @@ var ParticleEffects = {
 	init: function(){
 		this.emitter = game.add.emitter(0, 0, 20);
 		this.emitter.makeParticles('part');
-		this.emitter.setXSpeed(-50, 50);
-		this.emitter.setYSpeed(-50, 50);
+		this.emitter.setXSpeed(-20, 20);
+		this.emitter.setYSpeed(-20, 20);
 		this.emitter.gravity.y = 0;
 	},
 
@@ -17,7 +17,7 @@ var ParticleEffects = {
 	burstAt: function(x, y){
 		this.emitter.x = x;
 		this.emitter.y = y;
-		this.emitter.start(true, 2000, null, 20);
+		this.emitter.start(true, 600, null, 12);
 	}
 
 };

@@ -14,6 +14,11 @@ canvas {
 	image-rendering: crisp-edges;
 }
 
+/* fullscreen: canvas ocupa toda a tela */
+:-webkit-full-screen canvas { width: 100%; height: 100%; }
+:-moz-full-screen canvas { width: 100%; height: 100%; }
+:fullscreen canvas { width: 100%; height: 100%; }
+
 @font-face {
 	font-family: emulogic;
 	src: url('emulogic.ttf');

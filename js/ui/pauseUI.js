@@ -147,6 +147,12 @@ var PauseUI = {
 
 	// chamado pela Stage a cada frame quando pausado
 	update: function(controls){
+		// delega para overlay de configuracoes quando aberto
+		if(SettingsOverlay.isOpen){
+			SettingsOverlay.update();
+			return;
+		}
+
 		if(this.confirmActive){
 			this.updateConfirmInput(controls);
 		} else {
@@ -194,9 +200,18 @@ var PauseUI = {
 				this.updateConfirmCoinPosition();
 				Utils.debounce(this, GameConfig.DEBOUNCE_DELAY);
 				break;
-			case 2: // configuracoes
-				// TODO:Abrir settings dentro da pausa
-				this.resume();
+			case 2: // configuracoes - abre overlay de configuracoes
+				// esconde pauseMenu enquanto settings esta aberto
+				this.pauseGroup.visible = false;
+				var self = this;
+				SettingsOverlay.open({
+					returnState: 'stage1',
+					onClose: function(){
+						// quando settings fecha, mostra pauseMenu novamente
+						self.pauseGroup.visible = true;
+						self.updatePauseCoinPosition();
+					}
+				});
 				break;
 			case 3: // voltar ao menu
 				this.onQuit();

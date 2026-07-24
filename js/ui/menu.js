@@ -3,12 +3,14 @@ var menuState = {
 	selectedIndex: 0,
 	menuCount: 5,
 	inputReady: false,
+	settingsOpen: false,
+	enterWasDown: false,
 
 	menuItems: [
 		{ label: 'JOGAR',         action: 'play' },
 		{ label: 'CONFIGURACOES', action: 'settings' },
 		{ label: 'RECORDES',      action: 'records' },
-{ label: 'CREDITOS', action: 'credits' },
+		{ label: 'CREDITOS',      action: 'credits' },
 		{ label: 'SAIR',          action: 'quit' }
 	],
 
@@ -17,6 +19,8 @@ var menuState = {
 		PlayerData.load();
 		this.selectedIndex = 0;
 		this.inputReady = false;
+		this.settingsOpen = false;
+		this.enterWasDown = false;
 
 		// animacao de fundo - moeda lidera, player persegue, goblin persegue player
 		this.chaseAnim = ChaseAnimation.create({ y: 145, includeCoin: true });
@@ -40,6 +44,17 @@ var menuState = {
 		});
 		this.title.anchor.set(.5);
 		game.add.tween(this.title).to({y: 60}, 800, Phaser.Easing.Quadratic.Out, true);
+
+		// sincronizar fullscreen quando muda externamente
+		if(GameConfig.fullscreenEnabled && GameConfig.fullscreenChange){
+			document.addEventListener(GameConfig.fullscreenChange, function(){
+				var isFs = !!GameConfig.fullscreenElement();
+				SettingsManager.set('fullscreen', isFs);
+				if(SettingsOverlay && SettingsOverlay.isOpen){
+					SettingsOverlay.updateValues();
+				}
+			});
+		}
 
 		// itens do menu
 		this.menuTexts = [];
@@ -91,6 +106,26 @@ var menuState = {
 	},
 
 	update: function(){
+		// delega atualizacao para overlay de configuracoes quando aberto
+		if(SettingsOverlay.isOpen){
+			SettingsOverlay.update();
+			return;
+		}
+
+		// rastrear estado do ENTER sempre, mesmo quando bloqueado
+		var enterDown = this.enterKey.isDown;
+
+		// bloquear input do menu apos fechar overlay para evitar
+		// que ENTER residual seja processado como nova selecao
+		if(this.settingsOpen){
+			// so libera quando usuario soltar ENTER completamente
+			if(!enterDown){
+				this.settingsOpen = false;
+			}
+			this.enterWasDown = enterDown;
+			return;
+		}
+
 		ChaseAnimation.update(this.chaseAnim, true);
 
 		// bobbing da moeda indicadora
@@ -115,7 +150,11 @@ var menuState = {
 			Utils.debounce(this, GameConfig.DEBOUNCE_DELAY);
 		}
 
-		if(this.enterKey.isDown){
+		// detectar apenas nova pressao de ENTER (nao segurado)
+		var enterJustPressed = enterDown && !this.enterWasDown;
+		this.enterWasDown = enterDown;
+
+		if(enterJustPressed){
 			this.flashSelected();
 			this.executeAction();
 			Utils.debounce(this, 500);
@@ -129,7 +168,8 @@ var menuState = {
 				this.startGame();
 				break;
 			case 'settings':
-				game.state.start('settingsUI');
+				this.settingsOpen = true;
+				SettingsOverlay.open({ returnState: 'menu' });
 				break;
 			case 'records':
 				game.state.start('records');

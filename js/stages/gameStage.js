@@ -42,6 +42,19 @@ var stage1State = {
 		this.gameTime = 0;
 		this.createHUD();
 		this.pauseCooldown = false;
+
+		// sincronizar estado de fullscreen quando muda externamente (ex: usuario apertou Escape)
+		if(GameConfig.fullscreenEnabled && GameConfig.fullscreenChange){
+			var self = this;
+			document.addEventListener(GameConfig.fullscreenChange, function(){
+				var isFs = !!GameConfig.fullscreenElement();
+				SettingsManager.set('fullscreen', isFs);
+				// atualizar UI do settings se estiver aberto
+				if(SettingsOverlay && SettingsOverlay.isOpen){
+					SettingsOverlay.updateValues();
+				}
+			});
+		}
 	},
 
 	// constroi o labirinto a partir dos dados do mapa
@@ -102,6 +115,9 @@ var stage1State = {
 		this.gameTime += game.time.physicsElapsed;
 		this.txtTimer.text = 'TEMPO: ' + Utils.formatTime(this.gameTime);
 
+		// barra de estamina
+		this.updateStaminaBar();
+
 		// ESC para pausar
 		if(PlayerController.escKey.isDown && !this.pauseCooldown){
 			PauseUI.pause(PlayerController.sprite, EnemyManager.sprites);
@@ -122,24 +138,24 @@ var stage1State = {
 
 	// player coleta moedas
 	checkCoinCollisions: function(){
-		for(var i = 0; i < this.coinManager.coins.length; i++){
-			var coin = this.coinManager.coins[i];
-			if(coin.active){
-				game.physics.arcade.overlap(PlayerController.sprite, coin, this.playerCollectCoin, null, this);
-			}
+		var coins = this.coinManager.coins;
+		for(var i = 0; i < coins.length; i++){
+			if(!coins[i].active) continue;
+			game.physics.arcade.overlap(PlayerController.sprite, coins[i], this.playerCollectCoin, null, this);
 		}
 	},
 
 	// goblins coletam moedas e tocam no player
 	checkEnemyCollisions: function(){
-		for(var i = 0; i < EnemyManager.sprites.length; i++){
-			var enemy = EnemyManager.sprites[i];
+		var coins = this.coinManager.coins;
+		var enemies = EnemyManager.sprites;
 
-			for(var j = 0; j < this.coinManager.coins.length; j++){
-				var coin = this.coinManager.coins[j];
-				if(coin.active){
-					game.physics.arcade.overlap(enemy, coin, this.goblinCollectCoin, null, this);
-				}
+		for(var i = 0; i < enemies.length; i++){
+			var enemy = enemies[i];
+
+			for(var j = 0; j < coins.length; j++){
+				if(!coins[j].active) continue;
+				game.physics.arcade.overlap(enemy, coins[j], this.goblinCollectCoin, null, this);
 			}
 
 			game.physics.arcade.overlap(PlayerController.sprite, enemy, this.loseCoin, null, this);
@@ -184,6 +200,38 @@ var stage1State = {
 			font: '15px emulogic', fill: '#fff'
 		});
 		this.txtTimer.anchor.set(1, 0);
+
+		// barra de estamina
+		this.staminaBarBg = game.add.graphics();
+		this.staminaBarBg.fixedToCamera = true;
+		this.staminaBarFill = game.add.graphics();
+		this.staminaBarFill.fixedToCamera = true;
+		this.updateStaminaBar();
+	},
+
+	// atualiza a barra de estamina na HUD
+	updateStaminaBar: function(){
+		var barX = 15;
+		var barY = 45;
+		var barW = 120;
+		var barH = 12;
+		var ratio = PlayerController.stamina / PlayerController.maxStamina;
+
+		// fundo
+		this.staminaBarBg.clear();
+		this.staminaBarBg.beginFill(0x000000, 0.6);
+		this.staminaBarBg.drawRect(barX - 1, barY - 1, barW + 2, barH + 2);
+		this.staminaBarBg.endFill();
+
+		// preenchimento
+		var fillColor = 0x44cc44;
+		if(ratio < 0.33) fillColor = 0xcc4444;
+		else if(ratio < 0.66) fillColor = 0xcccc44;
+
+		this.staminaBarFill.clear();
+		this.staminaBarFill.beginFill(fillColor);
+		this.staminaBarFill.drawRect(barX, barY, barW * ratio, barH);
+		this.staminaBarFill.endFill();
 	},
 
 	shutdown: function(){
