@@ -38,11 +38,11 @@ var TouchControls = {
 	JOYSTICK_AXIS_MIN: 8,
 	PADDING: 30,
 
-	// escala dos sprites (botões maiores)
+	// escala dos sprites (dobrados)
 	PAD_SCALE: 0.85,
 	NUB_SCALE: 0.85,
-	BTN_SCALE: 1.0,
-	PAUSE_SCALE: 0.9,
+	BTN_SCALE: 2.0,
+	PAUSE_SCALE: 2.0,
 
 	active: false,
 
@@ -279,15 +279,15 @@ var TouchControls = {
 
 		// botao B (square): canto inferior direito
 		this.buttonB = this._createButton(
-			game.width - this.PADDING - sw / 2 - 5,
-			game.height - this.PADDING - sh - 35,
+			game.width - this.PADDING - sw / 2,
+			game.height - this.PADDING - sh / 2 - 10,
 			'btn_square', this.BTN_SCALE, 'B'
 		);
 
-		// botao A (circle): a esquerda do B, mais para baixo
+		// botao A (circle): a esquerda do B, nivelado
 		this.buttonA = this._createButton(
-			game.width - this.PADDING - sw - 55,
-			game.height - this.PADDING - sh / 2 + 5,
+			game.width - this.PADDING - sw - sw / 2 - 25,
+			game.height - this.PADDING - sh / 2 + 15,
 			'btn_circle', this.BTN_SCALE, 'A'
 		);
 
@@ -314,7 +314,7 @@ var TouchControls = {
 		// label de texto no centro do botao
 		var txt = null;
 		if(label){
-			var fontSize = (key === 'btn_wide') ? '10px' : '14px';
+			var fontSize = (key === 'btn_wide') ? '18px' : '24px';
 			txt = game.add.text(x, y, label, {
 				font: fontSize + ' emulogic',
 				fill: '#fff'
