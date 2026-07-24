@@ -19,6 +19,13 @@ var loadState = {
 		game.load.spritesheet('enemy', 'img/enemy.png', 24, 40);
 		game.load.spritesheet('player', 'img/player.png', 24, 32);
 
+		// controles touch
+		game.load.image('joy_pad', 'joysticks/joystick_default/joystick_polygon_pad_a.png');
+		game.load.image('joy_nub', 'joysticks/joystick_default/joystick_polygon_nub_b.png');
+		game.load.image('btn_circle', 'joysticks/joystick_default/button_circle.png');
+		game.load.image('btn_square', 'joysticks/joystick_default/button_square.png');
+		game.load.image('btn_wide', 'joysticks/joystick_default/button_circle_wide.png');
+
 		game.load.audio('getitem', 'sfx/getitem.ogg');
 		game.load.audio('loseitem', 'sfx/loseitem.ogg');
 		game.load.audio('music', 'sfx/menu.wav');

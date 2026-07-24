@@ -1,5 +1,5 @@
 // TouchControls - controles touch para dispositivos moveis.
-// Cria joystick virtual e botoes A, B e Pause na tela.
+// Usa sprites reais do joysticks/ para joystick e botoes.
 // Alimenta o mesmo sistema de input do teclado via wrappers transparentes.
 // Quando GameConfig.isMobile e false, modulo nao faz nada.
 var TouchControls = {
@@ -14,47 +14,43 @@ var TouchControls = {
 	_space: false,
 
 	// --- CONTROLE DE BORDA ---
-	_prevEnter: false,
-	_prevEscape: false,
 	_pauseHeld: false,
-	enterJustPressed: false,
-	escapeJustPressed: false,
 
 	// --- ELEMENTOS VISUAIS ---
 	group: null,
-	_joystickBase: null,
-	_joystickThumb: null,
+	_joystickPad: null,
+	_joystickNub: null,
 	_joystickCenter: { x: 0, y: 0 },
 	_joystickThumbOffset: { x: 0, y: 0 },
 	buttonA: null,
 	buttonB: null,
 	buttonPause: null,
 
-	// --- CONFIGURACAO DE LAYOUT ---
-	JOYSTICK_RADIUS: 40,
-	BUTTON_RADIUS: 25,
+	// --- CONFIGURACAO ---
+	JOYSTICK_TOUCH_RADIUS: 55,
 	PADDING: 30,
 
-	// se o modulo esta ativo
+	// escala dos sprites
+	PAD_SCALE: 0.65,
+	NUB_SCALE: 0.65,
+	BTN_SCALE: 0.75,
+	PAUSE_SCALE: 0.7,
+
 	active: false,
 
 	// ============================================================
 	// CRIACAO
 	// ============================================================
 
-	// chamado uma vez no inicio do jogo (game.js)
-	// so cria interface se for dispositivo mobile
 	create: function(){
 		if(!GameConfig.isMobile) return;
 		this.active = true;
 
-		// suporte a multitouch: criar ponteiros extras (1 ja existe por padrao)
 		game.input.maxPointers = 4;
 		game.input.addPointer();
 		game.input.addPointer();
 		game.input.addPointer();
 
-		// camada visual固定 na tela (nao move com a camera)
 		this.group = game.add.group();
 		this.group.fixedToCamera = true;
 
@@ -66,22 +62,15 @@ var TouchControls = {
 	// ATUALIZACAO
 	// ============================================================
 
-	// chamado a cada frame no inicio do update dos estados principais
-	// le todos os ponteiros ativos e atualiza flags de input
 	update: function(){
 		if(!this.active) return;
 
-		// garantir que controles ficam sempre no topo da lista de renderizacao
-		// (grupo criado no boot fica atras de todos os elementos do jogo)
+		// garantir controles no topo da lista de renderizacao
 		if(this.group && this.group.parent === game.world){
 			game.world.bringToTop(this.group);
 		}
 
-		// salvar estado anterior para deteccao de borda
-		var prevEnter = this._enter;
-		var prevEscape = this._escape;
-
-		// resetar todos os estados
+		// resetar estados
 		this._up = false;
 		this._down = false;
 		this._left = false;
@@ -91,14 +80,7 @@ var TouchControls = {
 		this._space = false;
 		this._joystickThumbOffset = { x: 0, y: 0 };
 
-		// processar todos os ponteiros ativos
 		this._processPointers();
-
-		// deteccao de borda (util para menus)
-		this.enterJustPressed = this._enter && !prevEnter;
-		this.escapeJustPressed = this._escape && !prevEscape;
-
-		// atualizar visuais do joystick
 		this._updateVisuals();
 	},
 
@@ -106,8 +88,6 @@ var TouchControls = {
 	// WRAPPERS DE INPUT
 	// ============================================================
 
-	// envolve cursor keys do teclado para tambem ler touch
-	// retorna objeto com getters isDown que checam ambos
 	wrapCursorKeys: function(cursorKeys){
 		var self = this;
 		return {
@@ -118,8 +98,6 @@ var TouchControls = {
 		};
 	},
 
-	// envolve uma tecla individual (ENTER, ESC, SPACE)
-	// touchFlag: nome da flag interna ('enter', 'escape', 'space')
 	wrapKey: function(key, touchFlag){
 		var self = this;
 		return {
@@ -128,34 +106,27 @@ var TouchControls = {
 	},
 
 	// ============================================================
-	// JOYSTICK VIRTUAL
+	// JOYSTICK (sprites)
 	// ============================================================
 
 	_createJoystick: function(){
-		var x = this.PADDING + this.JOYSTICK_RADIUS + 10;
-		var y = game.height - this.PADDING - this.JOYSTICK_RADIUS - 10;
+		var x = this.PADDING + 64;
+		var y = game.height - this.PADDING - 64;
 		this._joystickCenter = { x: x, y: y };
 
-		// base: borda forte, fundo visivel
-		this._joystickBase = game.add.graphics(x, y, this.group);
-		this._joystickBase.beginFill(0x333333, 0.6);
-		this._joystickBase.lineStyle(3, 0xffffff, 0.9);
-		this._joystickBase.drawCircle(0, 0, this.JOYSTICK_RADIUS * 2);
-		this._joystickBase.endFill();
+		// pad (base) - sprite 128x128
+		this._joystickPad = game.add.sprite(x, y, 'joy_pad', null, this.group);
+		this._joystickPad.anchor.set(0.5);
+		this._joystickPad.scale.set(this.PAD_SCALE);
+		this._joystickPad.smoothed = false;
+		this._joystickPad.alpha = 0.8;
 
-		// cruz central
-		this._joystickBase.lineStyle(2, 0xffffff, 0.6);
-		this._joystickBase.moveTo(-10, 0);
-		this._joystickBase.lineTo(10, 0);
-		this._joystickBase.moveTo(0, -10);
-		this._joystickBase.lineTo(0, 10);
-
-		// thumb: solido e visivel
-		this._joystickThumb = game.add.graphics(0, 0, this.group);
-		this._joystickThumb.beginFill(0xffffff, 0.7);
-		this._joystickThumb.lineStyle(3, 0xffffff, 1.0);
-		this._joystickThumb.drawCircle(0, 0, this.JOYSTICK_RADIUS * 0.6);
-		this._joystickThumb.endFill();
+		// nub (thumb que se move) - sprite 64x64
+		this._joystickNub = game.add.sprite(x, y, 'joy_nub', null, this.group);
+		this._joystickNub.anchor.set(0.5);
+		this._joystickNub.scale.set(this.NUB_SCALE);
+		this._joystickNub.smoothed = false;
+		this._joystickNub.alpha = 0.9;
 	},
 
 	_processPointers: function(){
@@ -176,26 +147,21 @@ var TouchControls = {
 			var px = p.x;
 			var py = p.y;
 
-			// joystick: primeira area tocada na metade inferior esquerda
 			if(!joystickClaimed && this._isInJoystickArea(px, py)){
 				this._processJoystick(px, py);
 				joystickClaimed = true;
 			}
 
-			// botao A: sprint (SPACE) + selecionar (ENTER)
 			if(this._isInButton(px, py, this.buttonA)){
 				this._space = true;
 				this._enter = true;
 			}
 
 			// botao B: reservado para interacoes futuras
-			// (conversar, abrir portas, usar itens, ativar mecanismos)
 			if(this._isInButton(px, py, this.buttonB)){
 				// nenhuma acao no momento
 			}
 
-			// botao pause: abre/fecha pausa (ESC) com deteccao de borda
-			// so dispara no primeiro frame do toque (nao segurado)
 			if(this._isInButton(px, py, this.buttonPause)){
 				pauseTouched = true;
 				if(!this._pauseHeld){
@@ -204,15 +170,13 @@ var TouchControls = {
 			}
 		}
 
-		// atualizar estado do pause para proximo frame
 		this._pauseHeld = pauseTouched;
 	},
 
 	_isInJoystickArea: function(px, py){
 		var dx = px - this._joystickCenter.x;
 		var dy = py - this._joystickCenter.y;
-		// area de toque: 2.5x o raio do joystick
-		return Math.sqrt(dx * dx + dy * dy) <= this.JOYSTICK_RADIUS * 2.5;
+		return Math.sqrt(dx * dx + dy * dy) <= this.JOYSTICK_TOUCH_RADIUS;
 	},
 
 	_processJoystick: function(px, py){
@@ -220,20 +184,19 @@ var TouchControls = {
 		var dy = py - this._joystickCenter.y;
 		var dist = Math.sqrt(dx * dx + dy * dy);
 
-		// zona morta: toque muito perto do centro = sem direcao
 		if(dist < 10) return;
 
-		// limitar thumb ao raio do joystick (para visual)
+		// limitar nub ao raio visual
+		var maxDist = 35;
 		var thumbDx = dx;
 		var thumbDy = dy;
-		if(dist > this.JOYSTICK_RADIUS){
-			thumbDx = dx / dist * this.JOYSTICK_RADIUS;
-			thumbDy = dy / dist * this.JOYSTICK_RADIUS;
+		if(dist > maxDist){
+			thumbDx = dx / dist * maxDist;
+			thumbDy = dy / dist * maxDist;
 		}
 		this._joystickThumbOffset = { x: thumbDx, y: thumbDy };
 
-		// detectar 4 direcoes + diagonais
-		// eixo dominante decide a direcao principal
+		// detectar direcoes
 		if(Math.abs(dx) > 10){
 			this._right = dx > 0;
 			this._left = dx < 0;
@@ -245,56 +208,56 @@ var TouchControls = {
 	},
 
 	// ============================================================
-	// BOTOES
+	// BOTOES (sprites)
 	// ============================================================
 
 	_createButtons: function(){
-		// botao A: canto inferior direito (sprint + selecionar)
+		var cw = 64 * this.BTN_SCALE;
+		var ch = 64 * this.BTN_SCALE;
+		var pw = 128 * this.PAUSE_SCALE;
+		var ph = 64 * this.PAUSE_SCALE;
+
+		// botao A (circle): canto inferior direito
 		this.buttonA = this._createButton(
-			game.width - this.PADDING - this.BUTTON_RADIUS - 10,
-			game.height - this.PADDING - this.BUTTON_RADIUS * 2 - 30,
-			'A'
+			game.width - this.PADDING - cw / 2 - 10,
+			game.height - this.PADDING - ch - 25,
+			'btn_circle', this.BTN_SCALE
 		);
 
-		// botao B: abaixo do A, mais a esquerda (futuro)
+		// botao B (square): abaixo e a esquerda do A
 		this.buttonB = this._createButton(
-			game.width - this.PADDING - this.BUTTON_RADIUS * 2 - 35,
-			game.height - this.PADDING - this.BUTTON_RADIUS - 15,
-			'B'
+			game.width - this.PADDING - cw - 25,
+			game.height - this.PADDING - ch / 2 - 10,
+			'btn_square', this.BTN_SCALE
 		);
 
-		// botao pause: centro inferior
+		// botao pause (wide circle): centro inferior
 		this.buttonPause = this._createButton(
 			game.width / 2,
-			game.height - this.PADDING - this.BUTTON_RADIUS + 5,
-			'PAUSE'
+			game.height - this.PADDING - ph / 2 + 5,
+			'btn_wide', this.PAUSE_SCALE
 		);
 	},
 
-	_createButton: function(x, y, label){
-		var r = this.BUTTON_RADIUS;
+	_createButton: function(x, y, key, scale){
+		var spr = game.add.sprite(x, y, key, null, this.group);
+		spr.anchor.set(0.5);
+		spr.scale.set(scale);
+		spr.smoothed = false;
+		spr.alpha = 0.85;
 
-		// botao solido e visivel
-		var gfx = game.add.graphics(x, y, this.group);
-		gfx.beginFill(0x333333, 0.6);
-		gfx.lineStyle(3, 0xffffff, 0.9);
-		gfx.drawCircle(0, 0, r);
-		gfx.endFill();
+		// raio de deteccao baseado no tamanho do sprite
+		var hw = spr.width / 2;
+		var hh = spr.height / 2;
+		var radius = Math.max(hw, hh);
 
-		// label
-		var txt = game.add.text(x, y, label, {
-			font: '12px emulogic', fill: '#ffffff'
-		}, this.group);
-		txt.anchor.set(0.5);
-
-		return { gfx: gfx, txt: txt, x: x, y: y, radius: r };
+		return { sprite: spr, x: x, y: y, radius: radius };
 	},
 
 	_isInButton: function(px, py, button){
 		if(!button) return false;
 		var dx = px - button.x;
 		var dy = py - button.y;
-		// margem extra de 10px para facilitar o toque
 		return Math.sqrt(dx * dx + dy * dy) <= button.radius + 10;
 	},
 
@@ -303,15 +266,13 @@ var TouchControls = {
 	// ============================================================
 
 	_updateVisuals: function(){
-		if(!this._joystickThumb) return;
+		if(!this._joystickNub) return;
 
-		// mover thumb conforme direcao tocada
-		// se nenhum toque, volta suavemente ao centro
 		var ox = this._joystickThumbOffset.x || 0;
 		var oy = this._joystickThumbOffset.y || 0;
 
-		this._joystickThumb.x = this._joystickCenter.x + ox;
-		this._joystickThumb.y = this._joystickCenter.y + oy;
+		this._joystickNub.x = this._joystickCenter.x + ox;
+		this._joystickNub.y = this._joystickCenter.y + oy;
 	}
 
 };
