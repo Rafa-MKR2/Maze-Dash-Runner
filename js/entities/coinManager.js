@@ -31,6 +31,9 @@ CoinManager.prototype = {
 	collect: function(coin){
 		if(!coin.active) return { collected: false };
 
+		var oldX = coin.x;
+		var oldY = coin.y;
+
 		coin.active = false;
 		coin.visible = false;
 		coin.body.enable = false;
@@ -43,7 +46,7 @@ CoinManager.prototype = {
 		coin.visible = true;
 		coin.body.enable = true;
 
-		return { collected: true, x: pos.x, y: pos.y };
+		return { collected: true, x: oldX, y: oldY };
 	},
 
 	// retorna lista de posicoes livres (fora do array de moedas atuais)
