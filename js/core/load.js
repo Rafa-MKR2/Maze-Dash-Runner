@@ -35,6 +35,9 @@ var loadState = {
 	},
 
 	create: function(){
+		// inicializar controles touch agora que os sprites estao carregados
+		TouchControls.create();
+
 		game.state.start('menu');
 	}
 

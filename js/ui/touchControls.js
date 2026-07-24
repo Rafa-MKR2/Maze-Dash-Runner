@@ -65,8 +65,17 @@ var TouchControls = {
 	update: function(){
 		if(!this.active) return;
 
+		// recriar group se foi destruido por transicao de estado
+		// (game.state.start() destroi game.world por padrao)
+		if(!this.group || !this.group.exists){
+			this.group = game.add.group();
+			this.group.fixedToCamera = true;
+			this._createJoystick();
+			this._createButtons();
+		}
+
 		// garantir controles no topo da lista de renderizacao
-		if(this.group && this.group.parent === game.world){
+		if(this.group.parent === game.world){
 			game.world.bringToTop(this.group);
 		}
 
