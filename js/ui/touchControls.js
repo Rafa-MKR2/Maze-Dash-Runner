@@ -48,8 +48,11 @@ var TouchControls = {
 		if(!GameConfig.isMobile) return;
 		this.active = true;
 
-		// suporte a multitouch: 4 ponteiros simultaneos
+		// suporte a multitouch: criar ponteiros extras (1 ja existe por padrao)
 		game.input.maxPointers = 4;
+		game.input.addPointer();
+		game.input.addPointer();
+		game.input.addPointer();
 
 		// camada visual固定 na tela (nao move com a camera)
 		this.group = game.add.group();
@@ -163,7 +166,7 @@ var TouchControls = {
 
 		for(var i = 0; i < pointers.length; i++){
 			var p = pointers[i];
-			if(!p.active || !p.isDown) continue;
+			if(!p || !p.active || !p.isDown) continue;
 
 			var px = p.x;
 			var py = p.y;
