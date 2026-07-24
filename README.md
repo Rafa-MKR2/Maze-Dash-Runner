@@ -1,41 +1,83 @@
-# Maze Dash Runner
+# 🏛️ Maze Dash Runner
 
-Jogo de labirinto desenvolvido com Phaser.js (Phaser 2).
+Um pequeno jogo de labirinto desenvolvido originalmente como um projeto de estudo utilizando **Phaser CE (Phaser 2)**.
 
-## Como executar
+Após anos sem manutenção, o projeto foi restaurado e organizado novamente, preservando sua identidade original enquanto recebeu melhorias na estrutura, documentação e ambiente de desenvolvimento.
+
+O objetivo desta restauração não é transformar o jogo em algo completamente diferente, mas concluir ideias que ficaram inacabadas e evoluí-lo de forma gradual.
+
+> 🚧 Este projeto continua em desenvolvimento.
+
+---
+
+## 🎮 Sobre o jogo
+
+Maze Dash Runner é um jogo de labirinto em estilo arcade.
+
+O jogador deve percorrer o mapa coletando moedas enquanto evita um goblin que tenta roubá-las. A proposta é simples, inspirada nos jogos clássicos, com foco em uma jogabilidade rápida e estética retrô.
+
+Atualmente o projeto possui:
+
+- Menu principal animado
+- Configurações de áudio
+- Sistema de coleta de moedas
+- Inimigo com IA simples
+- Efeitos sonoros e música
+- Estilo visual pixel art
+
+Novas funcionalidades serão adicionadas gradualmente durante o processo de restauração.
+
+---
+
+## 🛠 Tecnologias
+
+- JavaScript (ES5)
+- Phaser CE 2.10
+- HTML5
+- CSS3
+
+---
+
+## 🚀 Executando o projeto
+
+Clone o repositório:
+
+```bash
+git clone <url-do-repositório>
+```
+
+Instale as dependências:
 
 ```bash
 npm install
+```
+
+Inicie o servidor local:
+
+```bash
 npm run dev
 ```
 
-O navegador abrirá automaticamente em `http://localhost:3000`.
+Depois basta abrir o navegador no endereço informado pelo servidor.
 
-## Controles
+---
 
-- **Setas do teclado** — Mover o personagem
-- **Enter** — Iniciar jogo / Reiniciar
-- **Esc** — Voltar ao menu
+## 🏛️ Processo de restauração
 
-## Estrutura do projeto
+Este repositório está sendo restaurado em pequenas etapas.
 
-```
-├── index.html          # Página principal
-├── css/
-│   ├── estilo.css      # Estilos do jogo
-│   └── emulogic.ttf    # Fonte Emulogic
-├── js/
-│   ├── phaser.min.js   # Framework Phaser 2
-│   ├── boot.js         # Estado de inicialização
-│   ├── load.js         # Carregamento de assets
-│   ├── menu.js         # Tela do menu principal
-│   ├── stage1.js       # Gameplay do labirinto
-│   ├── end.js          # Tela de game over
-│   └── game.js         # Criação da instância do jogo
-├── img/                # Sprites e imagens
-└── sfx/                # Efeitos sonoros e música
-```
+Cada atualização busca preservar o código original enquanto melhora aspectos como:
 
-## Licença
+- organização do projeto;
+- documentação;
+- correção de bugs;
+- melhorias de interface;
+- novas funcionalidades planejadas originalmente.
 
-MIT
+Sempre que possível, as alterações respeitam a arquitetura e o estilo do projeto desenvolvido na época.
+
+---
+
+## 📜 Licença
+
+Este projeto está licenciado sob a licença MIT.
