@@ -6,6 +6,12 @@
 
 body {
 	background: #555;
+	overflow: hidden;
+}
+
+canvas {
+	image-rendering: pixelated;
+	image-rendering: crisp-edges;
 }
 
 @font-face {
