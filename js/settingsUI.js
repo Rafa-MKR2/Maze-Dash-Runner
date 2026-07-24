@@ -44,15 +44,15 @@ var settingsUIState = {
 			this.values.push(val);
 		}
 
-		// seta
-		this.arrow = game.add.text(0, 0, '>', {
-			font: '20px emulogic', fill: '#fff'
-		});
+		// moeda indicadora de selecao
+		this.menuCoin = game.add.sprite(0, 0, 'coin');
+		this.menuCoin.anchor.set(.5);
+		this.menuCoin.scale.set(1.1);
+		this.menuCoin.smoothed = false;
+		this.menuCoin.animations.add('spin', [0,1,2,3,4,5,6,7,8,9], 10, true).play();
+		this.coinBobTime = 0;
 
-		// blink
-		this.blinkTween = game.add.tween(this.labels[0]).to({alpha: 0.3}, 300, Phaser.Easing.Linear.None, true, 0, -1, true);
-
-		this.updateArrowPosition();
+		this.updateCoinPosition();
 
 		// controles
 		this.cursors = game.input.keyboard.createCursorKeys();
@@ -91,17 +91,24 @@ var settingsUIState = {
 	},
 
 	update: function(){
+		// bobbing da moeda indicadora
+		if(this.menuCoin.visible){
+			this.coinBobTime += game.time.physicsElapsed * 4;
+			var target = this.labels[this.selectedIndex];
+			this.menuCoin.y = target.y + Math.sin(this.coinBobTime) * 3;
+		}
+
 		if(!this.inputReady) return;
 
 		if(this.cursors.up.isDown && !this.cursors.down.isDown){
 			this.selectedIndex = (this.selectedIndex - 1 + this.options.length) % this.options.length;
-			this.updateArrowPosition();
+			this.updateCoinPosition();
 			this.playTick();
 			Utils.debounce(this);
 		} else
 		if(this.cursors.down.isDown && !this.cursors.up.isDown){
 			this.selectedIndex = (this.selectedIndex + 1) % this.options.length;
-			this.updateArrowPosition();
+			this.updateCoinPosition();
 			this.playTick();
 			Utils.debounce(this);
 		}
@@ -157,16 +164,12 @@ var settingsUIState = {
 		}
 	},
 
-	updateArrowPosition: function(){
+	updateCoinPosition: function(){
 		var target = this.labels[this.selectedIndex];
-		this.arrow.x = target.x - 25;
-		this.arrow.y = target.y - 8;
-
-		if(this.blinkTween) this.blinkTween.stop();
-		for(var i = 0; i < this.labels.length; i++){
-			this.labels[i].alpha = 1;
-		}
-		this.blinkTween = game.add.tween(target).to({alpha: 0.3}, 300, Phaser.Easing.Linear.None, true, 0, -1, true);
+		this.menuCoin.x = target.x - 25;
+		this.menuCoin.y = target.y;
+		this.coinBobTime = 0;
+		this.menuCoin.visible = true;
 	},
 
 	playTick: function(){

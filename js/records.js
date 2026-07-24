@@ -33,11 +33,15 @@ var recordsState = {
 		});
 		this.txtBack.anchor.set(.5);
 
-		this.arrow = game.add.text(0, 0, '>', {
-			font: '20px emulogic', fill: '#fff'
-		});
-		this.arrow.x = game.world.centerX - this.txtBack.width / 2 - 20;
-		this.arrow.y = this.txtBack.y - 8;
+		// moeda indicadora
+		this.menuCoin = game.add.sprite(0, 0, 'coin');
+		this.menuCoin.anchor.set(.5);
+		this.menuCoin.scale.set(1.1);
+		this.menuCoin.smoothed = false;
+		this.menuCoin.animations.add('spin', [0,1,2,3,4,5,6,7,8,9], 10, true).play();
+		this.menuCoin.x = game.world.centerX - this.txtBack.width / 2 - 22;
+		this.menuCoin.y = this.txtBack.y;
+		this.coinBobTime = 0;
 
 		// controles
 		var enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
@@ -49,6 +53,12 @@ var recordsState = {
 		escKey.onDown.addOnce(function(){
 			game.state.start('menu');
 		}, this);
+	},
+
+	update: function(){
+		// bobbing da moeda indicadora
+		this.coinBobTime += game.time.physicsElapsed * 4;
+		this.menuCoin.y = this.txtBack.y + Math.sin(this.coinBobTime) * 3;
 	}
 
 };

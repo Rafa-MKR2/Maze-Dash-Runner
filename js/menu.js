@@ -58,21 +58,21 @@ var menuState = {
 				this.tweensComplete++;
 				if(this.tweensComplete >= this.menuItems.length){
 					this.inputReady = true;
-					this.updateArrowPosition();
-					this.arrow.visible = true;
+					this.updateCoinPosition();
+					this.menuCoin.visible = true;
 				}
 			}, this);
 			this.menuTexts.push(txt);
 		}
 
-		// seta de selecao
-		this.arrow = game.add.text(0, 0, '>', {
-			font: '20px emulogic', fill: '#fff'
-		});
-		this.arrow.visible = false;
-
-		// blink tween
-		this.blinkTween = game.add.tween(this.menuTexts[0]).to({alpha: 0.3}, 300, Phaser.Easing.Linear.None, true, 0, -1, true);
+		// moeda indicadora de selecao
+		this.menuCoin = game.add.sprite(0, 0, 'coin');
+		this.menuCoin.anchor.set(.5);
+		this.menuCoin.scale.set(1.1);
+		this.menuCoin.smoothed = false;
+		this.menuCoin.animations.add('spin', [0,1,2,3,4,5,6,7,8,9], 10, true).play();
+		this.menuCoin.visible = false;
+		this.coinBobTime = 0;
 
 		// controles
 		this.cursors = game.input.keyboard.createCursorKeys();
@@ -92,17 +92,25 @@ var menuState = {
 
 	update: function(){
 		this.updateChaseAnimation();
+
+		// bobbing da moeda indicadora
+		if(this.menuCoin.visible){
+			this.coinBobTime += game.time.physicsElapsed * 4;
+			var target = this.menuTexts[this.selectedIndex];
+			this.menuCoin.y = target.y + Math.sin(this.coinBobTime) * 3;
+		}
+
 		if(!this.inputReady) return;
 
 		if(this.cursors.up.isDown && !this.cursors.down.isDown){
 			this.selectedIndex = (this.selectedIndex - 1 + this.menuCount) % this.menuCount;
-			this.updateArrowPosition();
+			this.updateCoinPosition();
 			this.playTick();
 			Utils.debounce(this, GameConfig.DEBOUNCE_DELAY);
 		} else
 		if(this.cursors.down.isDown && !this.cursors.up.isDown){
 			this.selectedIndex = (this.selectedIndex + 1) % this.menuCount;
-			this.updateArrowPosition();
+			this.updateCoinPosition();
 			this.playTick();
 			Utils.debounce(this, GameConfig.DEBOUNCE_DELAY);
 		}
@@ -139,7 +147,7 @@ var menuState = {
 		for(var i = 0; i < this.menuTexts.length; i++){
 			this.menuTexts[i].visible = false;
 		}
-		this.arrow.visible = false;
+		this.menuCoin.visible = false;
 		this.title.visible = false;
 
 		if(window._menuMusic){
@@ -157,55 +165,131 @@ var menuState = {
 		}, this);
 	},
 
-	updateArrowPosition: function(){
+	updateCoinPosition: function(){
 		var target = this.menuTexts[this.selectedIndex];
-		this.arrow.x = game.world.centerX - target.width / 2 - 20;
-		this.arrow.y = target.y - 12;
-
-		// blink no item selecionado
-		if(this.blinkTween) this.blinkTween.stop();
-		for(var i = 0; i < this.menuTexts.length; i++){
-			this.menuTexts[i].alpha = 1;
-		}
-		this.blinkTween = game.add.tween(target).to({alpha: 0.3}, 300, Phaser.Easing.Linear.None, true, 0, -1, true);
+		this.menuCoin.x = game.world.centerX - target.width / 2 - 22;
+		this.menuCoin.y = target.y;
+		this.coinBobTime = 0;
 	},
 
-	createChaseAnimation: function(){
-		this.chaseGap = 60;
-		this.chaseSpeed = 180;
-		this.chaseTrack = game.width + 60 + this.chaseGap * 2;
+	// --- personagens decorativos do menu ---
+	// a moeda lidera, o player persegue a moeda, o goblin persegue o player
+	// às vezes aparecem da esquerda pra direita, às vezes da direita pra esquerda
 
-		this.chaseCoin = game.add.sprite(-30, 145, 'coin');
+	createChaseAnimation: function(){
+		// moeda lidera — velocidade constante com leve variacao
+		this.chaseCoin = game.add.sprite(0, 145, 'coin');
 		this.chaseCoin.anchor.set(.5);
 		this.chaseCoin.smoothed = false;
 		this.chaseCoin.animations.add('spin', [0,1,2,3,4,5,6,7,8,9], 10, true).play();
+		this.chaseCoin.speedX = 180;
+		this.chaseCoin.speedY = 0;
 
-		this.chasePlayer = game.add.sprite(-30 - this.chaseGap, 145, 'player');
+		// player persegue a moeda
+		this.chasePlayer = game.add.sprite(0, 145, 'player');
 		this.chasePlayer.anchor.set(.5);
 		this.chasePlayer.smoothed = false;
-		this.chasePlayer.animations.add('run', [24,25,26,27,28,29,30,31], 12, true).play();
+		this.chasePlayer.animations.add('runRight', [24,25,26,27,28,29,30,31], 12, true);
+		this.chasePlayer.animations.add('runLeft', [16,17,18,19,20,21,22,23], 12, true);
+		this.chasePlayer.chaseSpeed = 165;
 
-		this.chaseEnemy = game.add.sprite(-30 - this.chaseGap * 2, 145, 'enemy');
+		// goblin persegue o player
+		this.chaseEnemy = game.add.sprite(0, 145, 'enemy');
 		this.chaseEnemy.anchor.set(.5);
 		this.chaseEnemy.smoothed = false;
-		this.chaseEnemy.animations.add('run', [24,25,26,27,28,29,30,31], 12, true).play();
+		this.chaseEnemy.animations.add('runRight', [24,25,26,27,28,29,30,31], 12, true);
+		this.chaseEnemy.animations.add('runLeft', [16,17,18,19,20,21,22,23], 12, true);
+		this.chaseEnemy.chaseSpeed = 180;
+
+		// posicao inicial aleatoria
+		this.respawnChaseGroup();
+	},
+
+	// respawn em grupo — todos reaparecem juntos na mesma lateral
+	respawnChaseGroup: function(){
+		var goRight = Math.random() < 0.5;
+		var baseSpeed = 150 + Math.random() * 40;
+
+		if(goRight){
+			this.chaseCoin.x = -30;
+			this.chaseCoin.speedX = baseSpeed;
+			this.chasePlayer.x = -30 - 80;
+			this.chaseEnemy.x = -30 - 160;
+			this.chasePlayer.animations.play('runRight');
+			this.chaseEnemy.animations.play('runRight');
+		} else {
+			this.chaseCoin.x = game.width + 30;
+			this.chaseCoin.speedX = -baseSpeed;
+			this.chasePlayer.x = game.width + 30 + 80;
+			this.chaseEnemy.x = game.width + 30 + 160;
+			this.chasePlayer.animations.play('runLeft');
+			this.chaseEnemy.animations.play('runLeft');
+		}
+
+		var baseY = 100 + Math.random() * 100;
+		this.chaseCoin.y = baseY;
+		this.chasePlayer.y = baseY;
+		this.chaseEnemy.y = baseY;
+		this.chaseCoin.speedY = (Math.random() - 0.5) * 30;
 	},
 
 	updateChaseAnimation: function(){
-		var speed = this.chaseSpeed * game.time.physicsElapsed;
+		var dt = game.time.physicsElapsed;
 
-		this.chaseCoin.x += speed;
-		this.chasePlayer.x += speed;
-		this.chaseEnemy.x += speed;
+		// moeda lidera — movimento livre
+		this.chaseCoin.x += this.chaseCoin.speedX * dt;
+		this.chaseCoin.y += this.chaseCoin.speedY * dt;
 
-		if(this.chaseCoin.x > game.width + 30){
-			this.chaseCoin.x -= this.chaseTrack;
+		// player persegue a moeda — desacelera ao chegar perto pra nunca alcançar
+		var dxCoin = this.chaseCoin.x - this.chasePlayer.x;
+		var dyCoin = this.chaseCoin.y - this.chasePlayer.y;
+		var distCoin = Math.sqrt(dxCoin * dxCoin + dyCoin * dyCoin);
+
+		if(distCoin > 3){
+			var mul = Phaser.Math.clamp(distCoin / 150, 0.15, 1.0);
+			this.chasePlayer.x += (dxCoin / distCoin) * this.chasePlayer.chaseSpeed * dt * mul;
+			this.chasePlayer.y += (dyCoin / distCoin) * this.chasePlayer.chaseSpeed * dt * 0.3 * mul;
 		}
-		if(this.chasePlayer.x > game.width + 30){
-			this.chasePlayer.x -= this.chaseTrack;
+
+		// goblin persegue o player — desacelera ao chegar perto
+		var dxPlayer = this.chasePlayer.x - this.chaseEnemy.x;
+		var dyPlayer = this.chasePlayer.y - this.chaseEnemy.y;
+		var distPlayer = Math.sqrt(dxPlayer * dxPlayer + dyPlayer * dyPlayer);
+
+		if(distPlayer > 3){
+			var mul2 = Phaser.Math.clamp(distPlayer / 150, 0.15, 1.0);
+			this.chaseEnemy.x += (dxPlayer / distPlayer) * this.chaseEnemy.chaseSpeed * dt * mul2;
+			this.chaseEnemy.y += (dyPlayer / distPlayer) * this.chaseEnemy.chaseSpeed * dt * 0.3 * mul2;
 		}
-		if(this.chaseEnemy.x > game.width + 30){
-			this.chaseEnemy.x -= this.chaseTrack;
+
+		// animacao baseada na direcao horizontal
+		if(dxCoin > 8){
+			this.chasePlayer.animations.play('runRight');
+		} else if(dxCoin < -8){
+			this.chasePlayer.animations.play('runLeft');
+		}
+		if(dxPlayer > 8){
+			this.chaseEnemy.animations.play('runRight');
+		} else if(dxPlayer < -8){
+			this.chaseEnemy.animations.play('runLeft');
+		}
+
+		// manter dentro da faixa vertical visivel
+		this.chaseCoin.y = Phaser.Math.clamp(this.chaseCoin.y, 80, game.height - 30);
+		this.chasePlayer.y = Phaser.Math.clamp(this.chasePlayer.y, 80, game.height - 30);
+		this.chaseEnemy.y = Phaser.Math.clamp(this.chaseEnemy.y, 80, game.height - 30);
+
+		// todos sairam da tela → respawn em grupo
+		var allOffRight = this.chaseCoin.x > game.width + 50 &&
+		                   this.chasePlayer.x > game.width + 50 &&
+		                   this.chaseEnemy.x > game.width + 50;
+
+		var allOffLeft = this.chaseCoin.x < -50 &&
+		                  this.chasePlayer.x < -50 &&
+		                  this.chaseEnemy.x < -50;
+
+		if(allOffRight || allOffLeft){
+			this.respawnChaseGroup();
 		}
 	},
 
