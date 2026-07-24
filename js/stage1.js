@@ -1,17 +1,30 @@
 var stage1State = {
 
 	create: function(){
+		// ler configuracoes
+		var settings;
+		try {
+			var saved = localStorage.getItem('mazeDashSettings');
+			settings = saved ? JSON.parse(saved) : { music: true, sfx: true };
+		} catch(e){
+			settings = { music: true, sfx: true };
+		}
+
 		//Musica e sons
-		this.music = game.add.audio('music1');
-		this.music.loop = true;
-		this.music.volume = .5;
-		this.music.play();
+		if(settings.music){
+			this.music = game.add.audio('music1');
+			this.music.loop = true;
+			this.music.volume = .5;
+			this.music.play();
+		}
 
 		this.sndCoin = game.add.audio('getitem');
 		this.sndCoin.volume = .5;
+		this.sndCoinEnabled = settings.sfx;
 
 		this.sndLoserCoin = game.add.audio('loseitem');
 		this.sndLoserCoin.volume = .5;
+		this.sndLoserCoinEnabled = settings.sfx;
 
 		game.add.sprite(0, 0, 'bg');
 
@@ -112,11 +125,11 @@ var stage1State = {
 	},
 
 	shutdown: function(){
-		this.music.stop();
+		if(this.music) this.music.stop();
 	},
 
 	loseCoin: function(){
-		this.sndLoserCoin.play();
+		if(this.sndLoserCoinEnabled) this.sndLoserCoin.play();
 
 		this.emitter.x = this.player.position.x;
 		this.emitter.y = this.player.position.y;
@@ -173,7 +186,7 @@ var stage1State = {
 		this.emitter.y = this.coin.position.y;
 		this.emitter.start(true, 2000, null, 20);
 
-		this.sndCoin.play();
+		if(this.sndCoinEnabled) this.sndCoin.play();
 
 		this.coins++;
 		this.txtCoins.text = 'COINS:' + this.getText(this.coins);
