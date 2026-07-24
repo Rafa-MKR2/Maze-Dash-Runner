@@ -71,6 +71,12 @@ var TouchControls = {
 	update: function(){
 		if(!this.active) return;
 
+		// garantir que controles ficam sempre no topo da lista de renderizacao
+		// (grupo criado no boot fica atras de todos os elementos do jogo)
+		if(this.group && this.group.parent === game.world){
+			game.world.bringToTop(this.group);
+		}
+
 		// salvar estado anterior para deteccao de borda
 		var prevEnter = this._enter;
 		var prevEscape = this._escape;
@@ -126,29 +132,28 @@ var TouchControls = {
 	// ============================================================
 
 	_createJoystick: function(){
-		// posicao: canto inferior esquerdo
 		var x = this.PADDING + this.JOYSTICK_RADIUS + 10;
 		var y = game.height - this.PADDING - this.JOYSTICK_RADIUS - 10;
 		this._joystickCenter = { x: x, y: y };
 
-		// circulo externo (base) - borda branca visivel, fundo semi-transparente
+		// base: borda forte, fundo visivel
 		this._joystickBase = game.add.graphics(x, y, this.group);
-		this._joystickBase.lineStyle(3, 0xffffff, 0.7);
-		this._joystickBase.beginFill(0xffffff, 0.15);
+		this._joystickBase.beginFill(0x333333, 0.6);
+		this._joystickBase.lineStyle(3, 0xffffff, 0.9);
 		this._joystickBase.drawCircle(0, 0, this.JOYSTICK_RADIUS * 2);
 		this._joystickBase.endFill();
 
-		// cruz central para referencia visual
-		this._joystickBase.lineStyle(1, 0xffffff, 0.4);
-		this._joystickBase.moveTo(-8, 0);
-		this._joystickBase.lineTo(8, 0);
-		this._joystickBase.moveTo(0, -8);
-		this._joystickBase.lineTo(0, 8);
+		// cruz central
+		this._joystickBase.lineStyle(2, 0xffffff, 0.6);
+		this._joystickBase.moveTo(-10, 0);
+		this._joystickBase.lineTo(10, 0);
+		this._joystickBase.moveTo(0, -10);
+		this._joystickBase.lineTo(0, 10);
 
-		// circulo interno (thumb - o que se move) - mais opaco
+		// thumb: solido e visivel
 		this._joystickThumb = game.add.graphics(0, 0, this.group);
-		this._joystickThumb.lineStyle(2, 0xffffff, 0.8);
-		this._joystickThumb.beginFill(0xffffff, 0.5);
+		this._joystickThumb.beginFill(0xffffff, 0.7);
+		this._joystickThumb.lineStyle(3, 0xffffff, 1.0);
 		this._joystickThumb.drawCircle(0, 0, this.JOYSTICK_RADIUS * 0.6);
 		this._joystickThumb.endFill();
 	},
@@ -269,16 +274,16 @@ var TouchControls = {
 	_createButton: function(x, y, label){
 		var r = this.BUTTON_RADIUS;
 
-		// circulo com borda branca visivel, fundo semi-transparente
+		// botao solido e visivel
 		var gfx = game.add.graphics(x, y, this.group);
-		gfx.lineStyle(3, 0xffffff, 0.7);
-		gfx.beginFill(0xffffff, 0.15);
+		gfx.beginFill(0x333333, 0.6);
+		gfx.lineStyle(3, 0xffffff, 0.9);
 		gfx.drawCircle(0, 0, r);
 		gfx.endFill();
 
-		// label do botao
+		// label
 		var txt = game.add.text(x, y, label, {
-			font: '11px emulogic', fill: '#ffffff'
+			font: '12px emulogic', fill: '#ffffff'
 		}, this.group);
 		txt.anchor.set(0.5);
 
