@@ -47,9 +47,10 @@ var stage1State = {
 			onQuit: function(){ AudioManager.stop(); game.state.start('menu'); }
 		});
 
-		// placar e timer
+		// placar, pontuacao e timer regressivo
 		this.coins = 0;
-		this.gameTime = 0;
+		this.score = 0;
+		this.timeRemaining = GameConfig.TIME_LIMIT;
 		this.createHUD();
 		this.pauseCooldown = false;
 
@@ -148,9 +149,14 @@ var stage1State = {
 			return;
 		}
 
-		// timer
-		this.gameTime += game.time.physicsElapsed;
-		this.txtTimer.text = 'TEMPO: ' + Utils.formatTime(this.gameTime);
+		// timer regressivo
+		this.timeRemaining -= game.time.physicsElapsed;
+		if(this.timeRemaining <= 0){
+			this.timeRemaining = 0;
+			this.timeoutGameOver();
+			return;
+		}
+		this.txtTimer.text = 'TEMPO: ' + Utils.formatTime(Math.max(0, this.timeRemaining));
 
 		// barra de estamina
 		this.updateStaminaBar();
@@ -210,6 +216,10 @@ var stage1State = {
 
 		this.coins++;
 		this.txtCoins.text = 'MOEDAS: ' + Utils.formatNumber(this.coins, 3);
+
+		// bonus de tempo +2s por moeda coletada
+		this.timeRemaining = Math.min(this.timeRemaining + GameConfig.TIME_BONUS_PER_COIN, GameConfig.TIME_LIMIT);
+		this.showFloatingText(result.x, result.y, '+2s', '#44cc44');
 	},
 
 	goblinCollectCoin: function(enemy, coin){
@@ -217,13 +227,34 @@ var stage1State = {
 	},
 
 	loseCoin: function(){
+		// ignorar se o jogador esta invulneravel apos teleporte
+		if(PlayerController.invulnTimer > 0) return;
+
+		// se tem moedas suficientes, o goblin rouba 5 e teleporta o player
+		if(this.coins >= GameConfig.GOBLIN_STEAL_COINS){
+			AudioManager.playLose();
+			this.coins -= GameConfig.GOBLIN_STEAL_COINS;
+			this.score += GameConfig.GOBLIN_STEAL_COINS;
+			this.txtCoins.text = 'MOEDAS: ' + Utils.formatNumber(this.coins, 3);
+
+			this.showFloatingText(PlayerController.sprite.x, PlayerController.sprite.y, '-' + GameConfig.GOBLIN_STEAL_COINS, '#ff4444');
+
+			// teleporta para posicao inicial com invulnerabilidade temporaria
+			PlayerController.sprite.x = this.startPosition.x;
+			PlayerController.sprite.y = this.startPosition.y;
+			PlayerController.invulnTimer = GameConfig.INVULNERABILITY_AFTER_TELEPORT;
+			game.camera.roundPx = false;
+			return;
+		}
+
+		// sem moedas suficientes = game over
 		AudioManager.playLose();
 		ParticleEffects.burstAt(PlayerController.sprite.x, PlayerController.sprite.y);
 
 		PlayerData.recordDeath();
-		PlayerData.recordGame(this.coins, this.gameTime);
+		PlayerData.recordGame(this.coins, GameConfig.TIME_LIMIT - this.timeRemaining);
 
-		game.state.start('end', true, false, { score: this.coins, time: this.gameTime });
+		game.state.start('end', true, false, { score: this.coins, time: this.timeRemaining, thiefScore: this.score });
 	},
 
 	// --- HUD ---
@@ -234,7 +265,12 @@ var stage1State = {
 		});
 		this.txtCoins.fixedToCamera = true;
 
-		this.txtTimer = game.add.text(game.camera.width - 15, 15, 'TEMPO: 00:00', {
+		this.txtScore = game.add.text(15, 32, 'PONTUACAO: ' + Utils.formatNumber(this.score, 3), {
+			font: '15px emulogic', fill: '#fff'
+		});
+		this.txtScore.fixedToCamera = true;
+
+		this.txtTimer = game.add.text(game.camera.width - 15, 15, 'TEMPO: ' + Utils.formatTime(GameConfig.TIME_LIMIT), {
 			font: '15px emulogic', fill: '#fff'
 		});
 		this.txtTimer.anchor.set(1, 0);
@@ -251,7 +287,7 @@ var stage1State = {
 	// atualiza a barra de estamina na HUD
 	updateStaminaBar: function(){
 		var barX = 15;
-		var barY = 45;
+		var barY = 65;
 		var barW = 120;
 		var barH = 12;
 		var ratio = PlayerController.stamina / PlayerController.maxStamina;
@@ -263,7 +299,7 @@ var stage1State = {
 		this.staminaBarBg.endFill();
 
 		// preenchimento
-		var fillColor = 0x44cc44;
+		var fillColor = 0x4488cc;
 		if(ratio < 0.33) fillColor = 0xcc4444;
 		else if(ratio < 0.66) fillColor = 0xcccc44;
 
@@ -271,6 +307,41 @@ var stage1State = {
 		this.staminaBarFill.beginFill(fillColor);
 		this.staminaBarFill.drawRect(barX, barY, barW * ratio, barH);
 		this.staminaBarFill.endFill();
+
+		// efeito piscante quando fadiga ativa
+		if(PlayerController.isFatigued){
+			var flashing = Math.floor(game.time.now / 300) % 2 === 0;
+			this.staminaBarFill.clear();
+			this.staminaBarFill.beginFill(flashing ? 0xff0000 : 0x330000);
+			this.staminaBarFill.drawRect(barX, barY, barW * ratio, barH);
+			this.staminaBarFill.endFill();
+		} else {
+			this.staminaBarFill.clear();
+			this.staminaBarFill.beginFill(fillColor);
+			this.staminaBarFill.drawRect(barX, barY, barW * ratio, barH);
+			this.staminaBarFill.endFill();
+		}
+	},
+
+	// texto flutuante temporario para feedback visual
+	showFloatingText: function(x, y, text, color){
+		var t = game.add.text(x, y, text, {
+			font: '13px emulogic', fill: color
+		});
+		t.anchor.set(0.5);
+		game.add.tween(t).to({ y: y - 30, alpha: 0 }, GameConfig.FLOAT_TEXT_DURATION, Phaser.Easing.Linear.None, true);
+		game.time.events.add(GameConfig.FLOAT_TEXT_DURATION, function(){ t.destroy(); }, this);
+	},
+
+	// game over por tempo esgotado
+	timeoutGameOver: function(){
+		AudioManager.playLose();
+		ParticleEffects.burstAt(PlayerController.sprite.x, PlayerController.sprite.y);
+
+		PlayerData.recordDeath();
+		PlayerData.recordGame(this.coins, GameConfig.TIME_LIMIT - this.timeRemaining);
+
+		game.state.start('end', true, false, { score: this.coins, time: this.timeRemaining, thiefScore: this.score, reason: 'timeout' });
 	},
 
 	shutdown: function(){

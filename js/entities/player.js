@@ -14,6 +14,12 @@ var PlayerController = {
 	isSprinting: false,
 	recoveryTimer: 0,
 
+	// fatigue state
+	isFatigued: false,
+
+	// invulnerability after teleport
+	invulnTimer: 0,
+
 	// cria o player na posicao indicada e configura animacoes
 	create: function(spawnX, spawnY){
 		this.sprite = game.add.sprite(spawnX, spawnY, 'player');
@@ -50,6 +56,8 @@ var PlayerController = {
 		this.maxStamina = GameConfig.STAMINA_MAX;
 		this.stamina = this.maxStamina;
 		this.isSprinting = false;
+		this.isFatigued = false;
+		this.invulnTimer = 0;
 
 		return this.sprite;
 	},
@@ -69,7 +77,12 @@ var PlayerController = {
 			this.isSprinting = true;
 			this.recoveryTimer = GameConfig.STAMINA_RECOVERY_DELAY;
 			this.stamina -= GameConfig.STAMINA_DRAIN * game.time.physicsElapsed;
-			if(this.stamina < 0) this.stamina = 0;
+			if(this.stamina <= 0){
+				this.stamina = 0;
+				this.isFatigued = true;
+				this.recoveryTimer = GameConfig.STAMINA_RECOVERY_DELAY + GameConfig.FATIGUE_PENALTY_DELAY;
+				AudioManager.playFatigue();
+			}
 		} else
 		if(this.stamina < this.maxStamina){
 			// aguardar delay antes de comecar a recuperar
@@ -78,7 +91,15 @@ var PlayerController = {
 			} else {
 				this.stamina += GameConfig.STAMINA_RECOVERY * game.time.physicsElapsed;
 				if(this.stamina > this.maxStamina) this.stamina = this.maxStamina;
+				if(this.isFatigued && this.stamina > 0){
+					this.isFatigued = false;
+				}
 			}
+		}
+
+		// countdown de invulnerabilidade apos teleporte
+		if(this.invulnTimer > 0){
+			this.invulnTimer -= game.time.physicsElapsed;
 		}
 
 		var speed = this.isSprinting ? GameConfig.SPRINT_SPEED : GameConfig.PLAYER_SPEED;

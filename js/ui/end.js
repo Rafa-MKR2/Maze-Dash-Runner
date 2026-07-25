@@ -3,6 +3,8 @@ var endState = {
 	init: function(data){
 		this.score = data.score || 0;
 		this.time = data.time || null;
+		this.thiefScore = data.thiefScore || 0;
+		this.reason = data.reason || 'coin';
 	},
 
 	create: function(){
@@ -14,32 +16,53 @@ var endState = {
 			this.music.play();
 		}
 
-		game.add.text(game.world.centerX, 120, 'GAME OVER', {
+		// centraliza na tela independente da posição da câmera
+		var cx = game.camera.view.centerX;
+		var cy = game.camera.view.centerY;
+
+		if(this.reason === 'timeout'){
+			game.add.text(cx, cy - 180, 'TEMPO ESGOTADO', {
+				font: '20px emulogic', fill: '#ff4444'
+			}).anchor.set(.5);
+		} else if(this.reason === 'coin'){
+			game.add.text(cx, cy - 180, 'PEGO POR GOBLIN', {
+				font: '20px emulogic', fill: '#ff4444'
+			}).anchor.set(.5);
+		}
+
+		game.add.text(cx, cy - 130, 'GAME OVER', {
 			font: '36px emulogic', fill: '#fff'
 		}).anchor.set(.5);
 
-		game.add.text(game.world.centerX, 200, 'MOEDAS: ' + Utils.formatNumber(this.score, 3), {
+		game.add.text(cx, cy - 50, 'MOEDAS: ' + Utils.formatNumber(this.score, 3), {
 			font: '20px emulogic', fill: '#fff'
 		}).anchor.set(.5);
 
-		game.add.text(game.world.centerX, 245, 'TEMPO: ' + Utils.formatTime(this.time), {
+		// pontuacao (pontuacao por roubo de goblin)
+		if(this.thiefScore > 0){
+			game.add.text(cx, cy - 10, 'PONTUACAO: ' + Utils.formatNumber(this.thiefScore, 3), {
+				font: '18px emulogic', fill: '#ffff00'
+			}).anchor.set(.5);
+		}
+
+		game.add.text(cx, cy + 30, 'TEMPO: ' + Utils.formatTime(this.time), {
 			font: '20px emulogic', fill: '#fff'
 		}).anchor.set(.5);
 
 		// melhores recordes
-		game.add.text(game.world.centerX, 310, 'MELHOR PONTUACAO: ' + Utils.formatNumber(PlayerData.stats.bestScore, 3), {
+		game.add.text(cx, cy + 90, 'MELHOR PONTUACAO: ' + Utils.formatNumber(PlayerData.stats.bestScore, 3), {
 			font: '15px emulogic', fill: '#aaa'
 		}).anchor.set(.5);
 
-		game.add.text(game.world.centerX, 340, 'MELHOR TEMPO: ' + Utils.formatTime(PlayerData.stats.bestTime), {
+		game.add.text(cx, cy + 120, 'MELHOR TEMPO: ' + Utils.formatTime(PlayerData.stats.bestTime), {
 			font: '15px emulogic', fill: '#aaa'
 		}).anchor.set(.5);
 
-		game.add.text(game.world.centerX, 400, 'ENTER PARA REINICIAR', {
+		game.add.text(cx, cy + 180, 'ENTER PARA REINICIAR', {
 			font: '15px emulogic', fill: '#fff'
 		}).anchor.set(.5);
 
-		game.add.text(game.world.centerX, 440, 'ESC PARA MENU', {
+		game.add.text(cx, cy + 220, 'ESC PARA MENU', {
 			font: '15px emulogic', fill: '#fff'
 		}).anchor.set(.5);
 

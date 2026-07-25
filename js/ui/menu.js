@@ -38,8 +38,12 @@ var menuState = {
 			this.menuMusic = window._menuMusic;
 		}
 
+		// centraliza na tela independente da posição da câmera
+		var cx = game.camera.view.centerX;
+		var cy = game.camera.view.centerY;
+
 		// titulo
-		this.title = game.add.text(game.world.centerX, -50, 'MAZE DASH RUNNER', {
+		this.title = game.add.text(cx, -50, 'MAZE DASH RUNNER', {
 			font: '36px emulogic', fill: '#fff'
 		});
 		this.title.anchor.set(.5);
@@ -63,7 +67,7 @@ var menuState = {
 		var spacing = 40;
 
 		for(var i = 0; i < this.menuItems.length; i++){
-			var txt = game.add.text(game.world.centerX, 550, this.menuItems[i].label, {
+			var txt = game.add.text(cx, 550, this.menuItems[i].label, {
 				font: '20px emulogic', fill: '#fff'
 			});
 			txt.anchor.set(.5);
@@ -206,7 +210,7 @@ var menuState = {
 			window._menuMusic = null;
 		}
 
-		this.quitText = game.add.text(game.world.centerX, game.world.centerY, 'OBRIGADO POR JOGAR!', {
+		this.quitText = game.add.text(cx, cy, 'OBRIGADO POR JOGAR!', {
 			font: '20px emulogic', fill: '#fff'
 		});
 		this.quitText.anchor.set(.5);
@@ -218,7 +222,7 @@ var menuState = {
 
 	updateCoinPosition: function(){
 		var target = this.menuTexts[this.selectedIndex];
-		this.menuCoin.x = game.world.centerX - target.width / 2 - 22;
+		this.menuCoin.x = game.camera.view.centerX - target.width / 2 - 22;
 		this.menuCoin.y = target.y;
 		this.coinBobTime = 0;
 	},

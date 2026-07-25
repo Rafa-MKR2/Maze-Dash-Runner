@@ -28,6 +28,7 @@ var loadState = {
 
 		game.load.audio('getitem', 'sfx/getitem.ogg');
 		game.load.audio('loseitem', 'sfx/loseitem.ogg');
+		game.load.audio('fatigue', 'sfx/sound_effects/fatigue.ogg');
 		game.load.audio('music', 'sfx/menu_music.ogg');
 		game.load.audio('music1', 'sfx/Lunar Joyride v0.7 .mp3');
 		game.load.audio('gameover', 'sfx/Miss (Jingle)-gameover.mp3');

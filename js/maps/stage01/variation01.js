@@ -22,7 +22,7 @@ var Stage01Variation01 = {
 		[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 	],
 
-	coinCount: 8,
+	coinCount: 4,
 
 	enemyType: 'goblin',
 	enemySpawns: [
