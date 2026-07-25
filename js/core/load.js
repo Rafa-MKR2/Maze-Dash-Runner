@@ -28,8 +28,9 @@ var loadState = {
 
 		game.load.audio('getitem', 'sfx/getitem.ogg');
 		game.load.audio('loseitem', 'sfx/loseitem.ogg');
-		game.load.audio('music', 'sfx/menu.wav');
-		game.load.audio('music1', 'sfx/stage1.wav');
+		game.load.audio('music', 'sfx/menu_music.ogg');
+		game.load.audio('music1', 'sfx/Lunar Joyride v0.7 .mp3');
+		game.load.audio('gameover', 'sfx/Miss (Jingle)-gameover.mp3');
 
 		game.physics.startSystem(Phaser.Physics.ARCADE);
 	},

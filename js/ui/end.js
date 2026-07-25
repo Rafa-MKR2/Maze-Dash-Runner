@@ -8,6 +8,12 @@ var endState = {
 	create: function(){
 		PlayerData.load();
 
+		if(SettingsManager.get('music')){
+			this.music = game.add.audio('gameover');
+			this.music.volume = SettingsManager.get('volume') / 100 * 0.5;
+			this.music.play();
+		}
+
 		game.add.text(game.world.centerX, 120, 'GAME OVER', {
 			font: '36px emulogic', fill: '#fff'
 		}).anchor.set(.5);
@@ -53,6 +59,10 @@ var endState = {
 				game.state.start('menu');
 			}, this);
 		}
+	},
+
+	shutdown: function(){
+		if(this.music) this.music.stop();
 	}
 
 };
