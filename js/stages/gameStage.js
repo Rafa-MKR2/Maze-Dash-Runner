@@ -7,10 +7,11 @@ var stage1State = {
 		SettingsManager.load();
 		PlayerData.load();
 
-		// carrega dados do mapa atual - trocar Stage01Data por outro mapa
-		// permite criar novas fases sem alterar este arquivo
-		var map = Stage01Data;
-		var tileSize = GameConfig.TILE_SIZE;
+	// carrega dados do estágio via Director.
+	// o Director escolhe a variação, quantidade de moedas,
+	// goblins e música — tudo previamente desenhado manualmente.
+	var map = Director.getStage(1);
+	var tileSize = GameConfig.TILE_SIZE;
 
 		// constroi o labirinto: paredes, posicao do player, retorna grupo de blocos
 		this.blocks = this.buildMap(map, tileSize);

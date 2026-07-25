@@ -1,6 +1,7 @@
-// dados do nivel 1 - labirinto, spawns, configuracao da fase
-// cada mapa define suas proprias regras. A Stage apenas carrega.
-var Stage01Data = {
+// Stage 01 — Variação 1.
+// Layout desenhado manualmente. Estrutura idêntica
+// à do antigo Stage01Data.
+var Stage01Variation01 = {
 
 	maze: [
 		[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
