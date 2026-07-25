@@ -33,8 +33,17 @@ var Director = {
 		// Diretor do caos.
 		// Hoje resolveu pegar leve.
 		// Talvez.
-		var index = Math.floor(Math.random() * variations.length);
-		return variations[index];
+		// Apenas a variação 1 possui dados válidos por enquanto.
+		// As variações 02-04 são templates à espera dos layouts manuais.
+		var validVariations = [];
+		for(var i = 0; i < variations.length; i++){
+			if(variations[i].maze.length > 0){
+				validVariations.push(variations[i]);
+			}
+		}
+
+		var index = Math.floor(Math.random() * validVariations.length);
+		return validVariations[index];
 	},
 
 	// monta o pacote final de dados que a Stage vai consumir.
