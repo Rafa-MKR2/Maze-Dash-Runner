@@ -1,22 +1,35 @@
 // Stage 01 — Variação 3.
-// Preencha com um layout manual diferente.
-// mesma estrutura de Stage01Variation01.
+// Nome: Crossroads.
+// Layout desenhado manualmente, 21 colunas por 11 linhas.
+// Perímetro completado com paredes (1).
+// Jogador spawn reposicionado para [7,10] (centro do cruzamento)
+// para dar a cada variação uma identidade própria de entrada.
 var Stage01Variation03 = {
 
+	name: "Crossroads",
+
 	maze: [
-		// [preencher com mapa 15x10]
-		// perímetro fechado (tudo 1 nas bordas),
-		// 2 para spawn do player, 3 para cofre de moeda,
-		// 0 para caminho livre, 1 para parede.
+		[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+		[1,0,0,3,0,0,0,3,0,0,0,3,0,0,0,3,0,0,0,3,1],
+		[1,0,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,0,1],
+		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+		[1,0,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,0,1],
+		[1,3,0,0,0,3,0,0,0,3,0,0,0,3,0,0,0,3,0,0,1],
+		[1,0,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,0,1],
+		[1,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1],
+		[1,0,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,0,1],
+		[1,3,0,0,0,3,0,0,0,3,0,0,0,3,0,0,0,3,0,3,1],
+		[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 	],
 
-	coinCount: 6,
+	coinCount: 8,
 
 	enemyType: 'goblin',
 	enemySpawns: [
-		// { row: <linha>, col: <coluna> },
-		// usar exatamente 4 spawns no total
-		// (Director vai escolher 3 ou 4),
+		{ row: 1, col: 1 },
+		{ row: 1, col: 19 },
+		{ row: 9, col: 1 },
+		{ row: 9, col: 19 }
 	],
 
 	musicKey: 'music1'

@@ -7,24 +7,33 @@ var stage1State = {
 		SettingsManager.load();
 		PlayerData.load();
 
-	// carrega dados do estágio via Director.
-	// o Director escolhe a variação, quantidade de moedas,
-	// goblins e música — tudo previamente desenhado manualmente.
-	var map = Director.getStage(1);
-	var tileSize = GameConfig.TILE_SIZE;
+		// carrega dados do estágio via Director.
+		// o Director escolhe a variação, quantidade de moedas,
+		// goblins e música — tudo previamente desenhado manualmente.
+		var map = Director.getStage(1);
+		var tileSize = GameConfig.TILE_SIZE;
 
 		// constroi o labirinto: paredes, posicao do player, retorna grupo de blocos
-		this.blocks = this.buildMap(map, tileSize);
+		this.blocks = this.buildMap(map.data, tileSize);
 
 		// inicializa player
 		PlayerController.create(this.startPosition.x, this.startPosition.y);
 
+		// configura o mundo e a câmera para suportar mapas maiores que a tela.
+		// o mundo tem o tamanho real do labirinto; a câmera segue o jogador
+		// mantendo-o centralizado e nunca mostrando fora dos limites.
+		var mapWidth = map.data.maze[0].length * tileSize;
+		var mapHeight = map.data.maze.length * tileSize;
+		game.world.setBounds(0, 0, mapWidth, mapHeight);
+		game.camera.follow(PlayerController.sprite, Phaser.Camera.FOLLOW_LOCKON);
+		game.camera.setBoundsToWorld();
+
 		// inicializa inimigos - EnemyManager decide qual factory usar
-		EnemyManager.create(map.enemySpawns, map.enemyType, map.maze);
+		EnemyManager.create(map.enemySpawns, map.enemyType, map.data.maze);
 
 		// inicializa moedas
-		var tilePositions = this.getWalkablePositions(map.maze, tileSize);
-		this.coinManager = new CoinManager(map.maze, tilePositions);
+		var tilePositions = this.getWalkablePositions(map.data.maze, tileSize);
+		this.coinManager = new CoinManager(map.data.maze, tilePositions);
 		this.coinManager.spawn(map.coinCount);
 
 		// inicializa sistemas de suporte
@@ -65,6 +74,11 @@ var stage1State = {
 
 		game.add.sprite(0, 0, 'bg');
 
+		// preenche o chão do labirinto com variações aleatórias de ground.
+		// tiles walkable (0, 2, 3) recebem um ground aleatório;
+		// paredes (1) não recebem ground — são cobertas pelos blocos.
+		this.renderGround(maze, tileSize);
+
 		var blocks = game.add.group();
 		blocks.enableBody = true;
 
@@ -85,6 +99,25 @@ var stage1State = {
 		}
 
 		return blocks;
+	},
+
+	// preenche o chão do labirinto com variações aleatórias de ground.
+	// segue a convenção de nomenclatura: nome_tipo + numero_de_variacao
+	// (ex.: ground_grass00, ground_grass01, etc.)
+	renderGround: function(maze, tileSize) {
+		var groundKeys = ['ground_grass00', 'ground_grass01', 'ground_grass02', 'ground_grass03'];
+
+		for(var row = 0; row < maze.length; row++){
+			for(var col = 0; col < maze[row].length; col++){
+				if(maze[row][col] === 1) continue; // paredes não recebem ground
+
+				var x = col * tileSize;
+				var y = row * tileSize;
+				var key = groundKeys[Math.floor(Math.random() * groundKeys.length)];
+				var ground = game.add.sprite(x, y, key);
+				ground.scale.set(tileSize / ground.width, tileSize / ground.height);
+			}
+		}
 	},
 
 	// retorna posicoes walkable (sem parede, sem player) para spawn de moedas
@@ -199,11 +232,13 @@ var stage1State = {
 		this.txtCoins = game.add.text(15, 15, 'MOEDAS: ' + Utils.formatNumber(this.coins, 3), {
 			font: '15px emulogic', fill: '#fff'
 		});
+		this.txtCoins.fixedToCamera = true;
 
-		this.txtTimer = game.add.text(game.width - 15, 15, 'TEMPO: 00:00', {
+		this.txtTimer = game.add.text(game.camera.width - 15, 15, 'TEMPO: 00:00', {
 			font: '15px emulogic', fill: '#fff'
 		});
 		this.txtTimer.anchor.set(1, 0);
+		this.txtTimer.fixedToCamera = true;
 
 		// barra de estamina
 		this.staminaBarBg = game.add.graphics();
