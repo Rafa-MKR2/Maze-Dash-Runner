@@ -70,7 +70,7 @@ var Director = {
 	},
 
 	// seleciona apenas os primeiros N spawns da variação.
-	funciona como um filtro: se a variação tem 4 spawns
+	// funciona como um filtro: se a variação tem 4 spawns
 	// mas o Director quer só 3, o quarto fica de fora.
 	selectSpawns: function(spawns, count) {
 		return spawns.slice(0, count);
