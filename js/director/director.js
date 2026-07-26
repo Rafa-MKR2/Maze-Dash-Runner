@@ -42,7 +42,7 @@ var Director = {
 	},
 
 	// monta o pacote final da partida que o GameStage vai consumir.
-	// informações de seleção ficam no nível superior.
+	// informacoes de seleção ficam no nível superior.
 	// o mapa original fica protegido dentro de data.
 	// GameStage não precisa saber como a variação foi escolhida.
 	buildStageData: function(variation, stageNumber) {
@@ -53,6 +53,13 @@ var Director = {
 		var coinCount = this.getCoinCount(variation);
 		var enemyCount = this.getGoblinCount();
 
+		// pega todas as posicoes walkable para spawn de itens
+		var walkable = this.getWalkableTiles(variation.maze);
+
+		// seleciona posicao para a chave e para a porta
+		// ambas em tiles validos, sem sobrepor jogador ou inimigos
+		var positions = this.placeItems(walkable, variation, enemyCount);
+
 		return {
 			stageId: stageNumber,
 			variation: variation.name,
@@ -62,8 +69,145 @@ var Director = {
 			musicKey: variation.musicKey,
 			enemySpawns: this.selectSpawns(variation.enemySpawns, enemyCount),
 			enemyType: variation.enemyType,
+			keyPosition: positions.keyPosition,
+			doorPosition: positions.doorPosition,
 			data: variation
 		};
+	},
+
+	// retorna todas as tiles walkable (0, 2, 3) como coordenadas de tile
+	getWalkableTiles: function(maze) {
+		var tiles = [];
+		for(var r = 0; r < maze.length; r++){
+			for(var c = 0; c < maze[r].length; c++){
+				var tile = maze[r][c];
+				if(tile !== 1){ // nao parede
+					tiles.push({ row: r, col: c });
+				}
+			}
+		}
+		return tiles;
+	},
+
+	// posiciona a chave e a porta em tiles walkable validos.
+	// a chave usa um tile livre.
+	// a porta precisa de 2 tiles horizontais livres (a porta tem 100px de largura
+	// = 2 tiles de 50px), por isso verifica que ambos estao desocupados.
+	// evita sobrepor com posicao do jogador, spawns de inimigos
+	// e quaisquer outras restricoes do Director.
+	placeItems: function(walkable, variation, enemyCount) {
+		var maze = variation.maze;
+		var enemySpawns = variation.enemySpawns || [];
+
+		// tiles ocupados (jogador, goblins)
+		var occupied = {};
+
+		for(var r = 0; r < maze.length; r++){
+			for(var c = 0; c < maze[r].length; c++){
+				if(maze[r][c] === 2){
+					occupied[r + ',' + c] = true;
+				}
+			}
+		}
+
+		for(var s = 0; s < Math.min(enemySpawns.length, enemyCount); s++){
+			occupied[enemySpawns[s].row + ',' + enemySpawns[s].col] = true;
+		}
+
+		// tiles walkable livres
+		var freeTiles = [];
+		for(var i = 0; i < walkable.length; i++){
+			var key = walkable[i].row + ',' + walkable[i].col;
+			if(!occupied[key]){
+				freeTiles.push(walkable[i]);
+			}
+		}
+
+		// seleciona posicao da chave (qualquer tile livre)
+		for(var i = freeTiles.length - 1; i > 0; i--){
+			var j = Math.floor(Math.random() * (i + 1));
+			var temp = freeTiles[i];
+			freeTiles[i] = freeTiles[j];
+			freeTiles[j] = temp;
+		}
+
+		var keyPosition = freeTiles[0] || { row: 1, col: 1 };
+
+		// seleciona posicao da porta: prefere extremidades de corredor
+		// e becos sem saida (menos vizinhos walkable).
+		// A porta precisa de 2 tiles horizontais livres consecutivos.
+		// Ela representa a saida da fase, entao deve parecer
+		// uma saida — nao bloquear circulacao principal nem aparecer
+		// no meio de cruzamentos.
+		var doorPosition = this.findBestDoorPosition(maze, occupied, walkable, maze.length, maze[0].length);
+
+		return {
+			keyPosition: keyPosition,
+			doorPosition: doorPosition
+		};
+	},
+
+	// encontra a melhor posicao para a porta dentre os tiles walkable livres.
+	// A porta precisa de 2 tiles horizontais consecutivos livres.
+	// Prefere posicoes com poucos vizinhos walkable livres —
+	// ou seja, extremidades de corredor e becos sem saida —
+	// onde a porta parece uma saída natural e nao bloqueia circulacao.
+	findBestDoorPosition: function(maze, occupied, freeTiles, rows, cols) {
+		var isFree = {};
+		for(var i = 0; i < freeTiles.length; i++){
+			isFree[freeTiles[i].row + ',' + freeTiles[i].col] = true;
+		}
+
+		var bestDoor = null;
+		var bestScore = Infinity;
+
+		for(var i = 0; i < freeTiles.length; i++){
+			var r = freeTiles[i].row;
+			var c = freeTiles[i].col;
+			var cKey = r + ',' + c;
+
+			if(occupied[cKey]) continue;
+
+			// proximo tile a direita
+			var nc = c + 1;
+			if(nc >= cols) continue;
+			var nKey = r + ',' + nc;
+			if(occupied[nKey]) continue;
+			if(maze[r][nc] === 1) continue;
+
+		// ambos os tiles sao validos — calcula score
+		// soma dos vizinhos walkable livres dos dois tiles
+		// quanto menor o score, mais isolado o par = melhor candidato
+		// bonus para tiles na borda do labirinto: a porta deve parecer
+		// uma saida — aparece na extremidade do mapa, nao no meio do corredor
+		var score = 0;
+		var neighbors = [
+			[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1],
+			[r - 1, nc], [r + 1, nc], [r, nc - 1], [r, nc + 1]
+		];
+		for(var n = 0; n < neighbors.length; n++){
+			var nr = neighbors[n][0];
+			var nc2 = neighbors[n][1];
+			if(nr < 0 || nr >= rows || nc2 < 0 || nc2 >= cols) continue;
+			if(maze[nr][nc2] === 1) continue;
+			var nk = nr + ',' + nc2;
+			if(isFree[nk] || nk === cKey || nk === nKey) score++;
+		}
+		// bonus de borda: tiles proximos da parede externa recebem reducao no score
+		if(r === 1 || r === rows - 2) score -= 2;
+		if(c === 1 || c === cols - 2 || nc === cols - 2) score -= 2;
+
+		if(score < bestScore){
+				bestScore = score;
+				bestDoor = { row: r, col: c };
+			}
+		}
+
+		if(!bestDoor){
+			bestDoor = { row: rows - 2, col: Math.max(0, cols - 3) };
+		}
+
+		return bestDoor;
 	},
 
 	// valida o mapa de uma variação e retorna um resultado estruturado.
