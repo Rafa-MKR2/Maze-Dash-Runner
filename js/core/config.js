@@ -44,6 +44,12 @@ var GameConfig = {
 	GOBLIN_VISION_DISTANCE: 200,
 	GOBLIN_FOV: 50,
 	GOBLIN_HINT_INTERVAL: 10,
-	COIN_COUNT: 6
+	COIN_COUNT: 6,
+
+	// chave: duracao da flutuacao acima do jogador apos coleta (ms)
+	KEY_FLOAT_DURATION: 3000,
+
+	// animacao de aparencia da porta (ms)
+	DOOR_APPEAR_DURATION: 400
 
 };

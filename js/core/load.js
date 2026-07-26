@@ -33,6 +33,10 @@ var loadState = {
 		game.load.audio('music1', 'sfx/Lunar Joyride v0.7 .mp3');
 		game.load.audio('gameover', 'sfx/Miss (Jingle)-gameover.mp3');
 
+		game.load.spritesheet('key', 'img/keyIcons.png', 32, 32);
+		game.load.spritesheet('door', 'img/door.png', 50, 50);
+		game.load.audio('win', 'sfx/ win-level.ogg');
+
 		// ground tiles - chão do labirinto preenchido dinamicamente
 		game.load.image('ground_grass00', 'img/grounds_tilesets/ground_grass/ground_grass00.png');
 		game.load.image('ground_grass01', 'img/grounds_tilesets/ground_grass/ground_grass01.png');

@@ -7,6 +7,7 @@ var AudioManager = {
 	sndCoin: null,
 	sndLose: null,
 	sndFatigue: null,
+	sndWin: null,
 
 	init: function(musicKey){
 		this.music = null;
@@ -16,6 +17,8 @@ var AudioManager = {
 		this.sndLose.volume = 0.5;
 		this.sndFatigue = game.add.audio('fatigue');
 		this.sndFatigue.volume = 0.4;
+		this.sndWin = game.add.audio('win');
+		this.sndWin.volume = 0.6;
 
 		if(musicKey && SettingsManager.get('music')){
 			this.music = game.add.audio(musicKey);
@@ -35,6 +38,10 @@ var AudioManager = {
 
 	playFatigue: function(){
 		if(SettingsManager.get('sfx')) this.sndFatigue.play();
+	},
+
+	playWin: function(){
+		if(SettingsManager.get('sfx')) this.sndWin.play();
 	},
 
 	// som de navegacao em menus - reutilizavel por qualquer tela
