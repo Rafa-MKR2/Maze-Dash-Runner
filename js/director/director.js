@@ -62,6 +62,7 @@ var Director = {
 
 		return {
 			stageId: stageNumber,
+			stageName: this.getStageName(stageNumber),
 			variation: variation.name,
 			difficulty: this.difficulty,
 			enemyCount: enemyCount,
@@ -181,6 +182,13 @@ var Director = {
 	// porque aparentemente um só não era suficiente.
 	getGoblinCount: function() {
 		return Math.random() < 0.5 ? 3 : 4;
+	},
+
+	getStageName: function(stageNumber) {
+		var names = {
+			1: 'Brick Maze'
+		};
+		return names[stageNumber] || 'Stage ' + stageNumber;
 	}
 
 };

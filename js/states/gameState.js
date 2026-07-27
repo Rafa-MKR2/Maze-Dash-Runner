@@ -202,6 +202,16 @@ var gameState = {
 			maxStamina: PlayerController.maxStamina
 		});
 		game.world.bringToTop(this.hud.group);
+
+		var txtLevel = game.add.text(15, game.height - 20, this._map.stageName + ' - ' + this._map.variation, {
+			font: '11px ' + GameConfig.UI_FONT, fill: '#aaa'
+		});
+		txtLevel.fixedToCamera = true;
+		game.time.events.add(4000, function(){
+			game.add.tween(txtLevel).to({ alpha: 0 }, 500).start().onComplete.add(function(){
+				txtLevel.destroy();
+			});
+		});
 	},
 
 	_onCoinCollect: function(x, y){
