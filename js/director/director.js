@@ -46,19 +46,19 @@ var Director = {
 	},
 
 	// monta o pacote final da partida que o GameStage vai consumir.
-	// informacoes de seleção ficam no nível superior.
-	// o mapa original fica protegido dentro de data.
-	// GameStage não precisa saber como a variação foi escolhida.
+	// o mapa textual (se houver) e convertido para numerico aqui mesmo,
+	// antes de qualquer logica de gameplay — Director, GoblinAI, colisoes
+	// e renderizacao so enxergam arrays de inteiros.
 	buildStageData: function(variation, stageNumber) {
+		var parsed = MapParser.parse(variation.maze);
+		var maze = parsed.maze;
+
 		var coinCount = variation.coinCount;
 		var enemyCount = this.getGoblinCount();
 
-		// pega todas as posicoes walkable para spawn de itens
-		var walkable = this.getWalkableTiles(variation.maze);
+		var walkable = this.getWalkableTiles(maze);
 
-		// seleciona posicao para a chave e para a porta
-		// ambas em tiles validos, sem sobrepor jogador ou inimigos
-		var positions = this.placeItems(walkable, variation, enemyCount);
+		var positions = this.placeItems(walkable, variation, enemyCount, maze);
 
 		return {
 			stageId: stageNumber,
@@ -72,7 +72,9 @@ var Director = {
 			enemyType: variation.enemyType,
 			keyPosition: positions.keyPosition,
 			doorPosition: positions.doorPosition,
-			data: variation
+			data: {
+				maze: maze
+			}
 		};
 	},
 
@@ -95,8 +97,8 @@ var Director = {
 	// a porta ocupa 1 tile (50x50), marcado com 4 no maze.
 	// evita sobrepor com posicao do jogador, spawns de inimigos
 	// e quaisquer outras restricoes do Director.
-	placeItems: function(walkable, variation, enemyCount) {
-		var maze = variation.maze;
+	placeItems: function(walkable, variation, enemyCount, maze) {
+		maze = maze || variation.maze;
 		var enemySpawns = variation.enemySpawns || [];
 
 		// tiles ocupados (jogador, goblins)
