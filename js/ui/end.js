@@ -68,7 +68,7 @@ var endState = {
 
 		var enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
 		enterKey.onDown.addOnce(function(){
-			game.state.start('stage1');
+			game.state.start('game');
 		}, this);
 
 		var escKey = game.input.keyboard.addKey(Phaser.Keyboard.ESC);

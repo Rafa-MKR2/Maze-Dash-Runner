@@ -241,7 +241,7 @@ var menuState = {
 			window._menuMusic.stop();
 			window._menuMusic = null;
 		}
-		game.state.start('stage1');
+		game.state.start('game');
 	}
 
 };

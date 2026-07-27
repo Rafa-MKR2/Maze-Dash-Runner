@@ -208,7 +208,7 @@ var PauseUI = {
 				this.pauseGroup.visible = false;
 				var self = this;
 				SettingsOverlay.open({
-					returnState: 'stage1',
+					returnState: 'game',
 					onClose: function(){
 						// quando settings fecha, mostra pauseMenu novamente
 						self.pauseGroup.visible = true;

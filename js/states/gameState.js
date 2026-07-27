@@ -1,4 +1,4 @@
-var gameStage = {
+var gameState = {
 
 	hud: null,
 	collisions: null,
@@ -198,7 +198,7 @@ var gameStage = {
 	_setupUI: function(){
 		PauseUI.create({
 			onResume: function(){ AudioManager.resume(); },
-			onRestart: function(){ AudioManager.stop(); game.state.start('stage1'); },
+			onRestart: function(){ AudioManager.stop(); game.state.start('game'); },
 			onQuit: function(){ AudioManager.stop(); game.state.start('menu'); }
 		});
 
@@ -215,7 +215,7 @@ var gameStage = {
 	_transitionNextStage: function(){
 		this.hud.hideKeyIcon();
 
-		game.state.start('stage1', true, false, {
+		game.state.start('game', true, false, {
 			score: this.score,
 			timeRemaining: this.timeRemaining
 		});
