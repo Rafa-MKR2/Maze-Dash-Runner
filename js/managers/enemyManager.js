@@ -7,7 +7,8 @@ var EnemyManager = {
 	sprites: [],
 	ais: [],
 
-	create: function(spawnPositions, enemyType, maze){
+	create: function(spawnPositions, enemyType, maze, onGoblinLostPlayer){
+		var self = this;
 		var tileSize = GameConfig.TILE_SIZE;
 		this.sprites = [];
 		this.ais = [];
@@ -27,9 +28,22 @@ var EnemyManager = {
 		for(var i = 0; i < spawns.length; i++){
 			var spawnX = spawns[i].col * tileSize + tileSize / 2;
 			var spawnY = spawns[i].row * tileSize + tileSize / 2;
-			var entity = factory.create(spawnX, spawnY, maze);
+			var entity = factory.create(spawnX, spawnY, maze, onGoblinLostPlayer);
 			this.sprites.push(entity.sprite);
 			this.ais.push(entity.ai);
+		}
+
+		// configurar alerta entre goblins: se um perseguir por muito tempo
+		for(var i = 0; i < this.ais.length; i++){
+			(function(ai, allAis){
+				ai.setLongChaseCallback(function(playerX, playerY){
+					for(var j = 0; j < allAis.length; j++){
+						if(allAis[j] !== ai){
+							allAis[j].setAlertTarget(playerX, playerY);
+						}
+					}
+				});
+			})(this.ais[i], this.ais);
 		}
 	},
 

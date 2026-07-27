@@ -15,6 +15,7 @@ var KeyDoorManager = function(config){
 	this._doorProcessed = false;
 
 	this.onKeyCollected = config.onKeyCollected || function(){};
+	this.onDoorTouch = config.onDoorTouch || function(){};
 	this.onStageComplete = config.onStageComplete || function(){};
 };
 
@@ -79,9 +80,10 @@ KeyDoorManager.prototype = {
 		this._doorProcessed = true;
 		this.isFrozen = true;
 		this.door.startOpening();
+		this.onDoorTouch();
 
 		var self = this;
-		game.time.events.add(Phaser.Timer.SECOND * 3, function(){
+		game.time.events.add(Phaser.Timer.SECOND * 3.5, function(){
 			self._finishStage();
 		});
 	},

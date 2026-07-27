@@ -21,7 +21,7 @@ var GameConfig = {
 	INVULNERABILITY_AFTER_TELEPORT: 1,
 
 	// regressive timer (seconds)
-	TIME_LIMIT: 240,
+	TIME_LIMIT: 150,
 
 	// coins stolen by goblin per hit
 	GOBLIN_STEAL_COINS: 3,
@@ -41,6 +41,9 @@ var GameConfig = {
 	fullscreenChange: null,
 
 	GOBLIN_CHASE_SPEED: 75,
+	GOBLIN_CHASE_BOOST_SPEED: 90,
+	GOBLIN_LONG_CHASE_TIME: 3.5,
+	GOBLIN_ALERT_DURATION: 8,
 	GOBLIN_VISION_DISTANCE: 200,
 	GOBLIN_FOV: 50,
 	GOBLIN_HINT_INTERVAL: 10,

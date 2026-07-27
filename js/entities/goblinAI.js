@@ -1,10 +1,16 @@
-var GoblinAI = function(maze, enemy){
+var GoblinAI = function(maze, enemy, onLostPlayer){
 	this.maze = maze;
 	this.enemy = enemy;
 	this.state = 'PATROL';
 	this.speed = GameConfig.ENEMY_SPEED;
 	this.hintTimer = 0;
 	this.hintUsed = false;
+	this.onLostPlayer = onLostPlayer || function(){};
+	this.onLongChase = function(){};
+	this.chaseTimer = 0;
+	this.speedBoosted = false;
+	this.alertTarget = null;
+	this.alertTimer = 0;
 };
 
 GoblinAI.prototype = {
@@ -16,12 +22,13 @@ GoblinAI.prototype = {
 		this.checkCoinVision();
 		this.updateState();
 		this.updateHint();
+		this.updateChaseTimer();
 		this.move();
 	},
 
 	checkVision: function(){
 		var tileSize = GameConfig.TILE_SIZE;
-		var maxDist = GameConfig.GOBLIN_VISION_DISTANCE;
+		var maxDist = this.state === 'ALERT' ? GameConfig.GOBLIN_VISION_DISTANCE * 2 : GameConfig.GOBLIN_VISION_DISTANCE;
 		var goblinCol = Math.floor(this.enemy.x / tileSize);
 		var goblinRow = Math.floor(this.enemy.y / tileSize);
 		var playerCol = Math.floor(this.player.x / tileSize);
@@ -113,10 +120,19 @@ GoblinAI.prototype = {
 
 	updateState: function(){
 		if(this.canSeePlayer){
-			if(this.state !== 'CHASE') this.enterChase();
+			if(this.state !== 'CHASE'){
+				if(this.state === 'ALERT') this.exitAlert();
+				this.enterChase();
+			}
 		} else
 		if(this.state === 'CHASE'){
 			this.exitChase();
+		} else
+		if(this.state === 'ALERT'){
+			this.alertTimer += game.time.physicsElapsed;
+			if(this.alertTimer >= GameConfig.GOBLIN_ALERT_DURATION || this._atAlertTarget()){
+				this.exitAlert();
+			}
 		} else
 		if(this.targetCoin){
 			if(this.state !== 'COLLECT') this.enterCollect();
@@ -132,14 +148,19 @@ GoblinAI.prototype = {
 		this.hintTimer = 0;
 		this.hintUsed = false;
 		this.targetCoin = null;
+		this.chaseTimer = 0;
+		this.speedBoosted = false;
+		this.alertTarget = null;
 	},
 
 	exitChase: function(){
-		this.state = 'PATROL';
-		this.speed = GameConfig.ENEMY_SPEED;
 		this.hintTimer = 0;
 		this.hintUsed = false;
 		this.enemy.processedIntersection = false;
+		this.chaseTimer = 0;
+		this.speedBoosted = false;
+		this.onLostPlayer();
+		this.enterAlert(this.player.x, this.player.y);
 	},
 
 	enterCollect: function(){
@@ -163,6 +184,49 @@ GoblinAI.prototype = {
 			this.hintTimer = 0;
 			this.hintUsed = true;
 		}
+	},
+
+	updateChaseTimer: function(){
+		if(this.state === 'CHASE'){
+			this.chaseTimer += game.time.physicsElapsed;
+			if(this.chaseTimer >= GameConfig.GOBLIN_LONG_CHASE_TIME && !this.speedBoosted){
+				this.speedBoosted = true;
+				this.speed = GameConfig.GOBLIN_CHASE_BOOST_SPEED;
+				this.onLongChase(this.player.x, this.player.y);
+			}
+		}
+	},
+
+	enterAlert: function(x, y){
+		this.state = 'ALERT';
+		this.speed = GameConfig.ENEMY_SPEED;
+		this.hintTimer = 0;
+		this.hintUsed = false;
+		this.alertTarget = { x: x, y: y };
+		this.alertTimer = 0;
+	},
+
+	exitAlert: function(){
+		this.state = 'PATROL';
+		this.speed = GameConfig.ENEMY_SPEED;
+		this.alertTarget = null;
+		this.hintTimer = 0;
+		this.hintUsed = false;
+	},
+
+	_atAlertTarget: function(){
+		if(!this.alertTarget) return true;
+		var dx = Math.abs(this.enemy.x - this.alertTarget.x);
+		var dy = Math.abs(this.enemy.y - this.alertTarget.y);
+		return dx < GameConfig.TILE_SIZE * 0.8 && dy < GameConfig.TILE_SIZE * 0.8;
+	},
+
+	setAlertTarget: function(x, y){
+		this.alertTarget = { x: x, y: y };
+	},
+
+	setLongChaseCallback: function(cb){
+		this.onLongChase = cb;
 	},
 
 	move: function(){
@@ -268,8 +332,12 @@ GoblinAI.prototype = {
 		return filtered;
 	},
 
-	// PATROL: direcao aleatoria, ou dica do player
+	// PATROL: direcao aleatoria, ou dica do player, ou alerta de posicao
 	choosePatrolDirection: function(){
+		if(this.alertTarget){
+			this.chooseDirectionToward(this.alertTarget.x, this.alertTarget.y);
+			return;
+		}
 		if(this.hintUsed){
 			this.hintUsed = false;
 			this.chooseChaseDirection();

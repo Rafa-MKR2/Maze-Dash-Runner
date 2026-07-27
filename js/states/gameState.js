@@ -27,6 +27,10 @@ var gameState = {
 
 		this.keyDoor = new KeyDoorManager({
 			onKeyCollected: this._onKeyCollected.bind(this),
+			onDoorTouch: function(){
+				AudioManager.stop();
+				AudioManager.playWin();
+			},
 			onStageComplete: this._onStageComplete.bind(this)
 		});
 		this.keyDoor.spawn(this._map.keyPosition, this._map.doorPosition, GameConfig.TILE_SIZE);
@@ -120,6 +124,7 @@ var gameState = {
 			this.score = 0;
 			this.timeRemaining = GameConfig.TIME_LIMIT;
 		}
+		this.points = 0;
 	},
 
 	_setupStage: function(){
@@ -143,7 +148,11 @@ var gameState = {
 	},
 
 	_setupEntities: function(){
-		EnemyManager.create(this._map.enemySpawns, this._map.enemyType, this._map.data.maze);
+		var self = this;
+		EnemyManager.create(this._map.enemySpawns, this._map.enemyType, this._map.data.maze, function(){
+			self.points += 5;
+			self.hud.updateScore(self.points);
+		});
 
 		var keyR = this._map.keyPosition.row;
 		var keyC = this._map.keyPosition.col;
@@ -184,7 +193,7 @@ var gameState = {
 		this.hud = new StageHUD();
 		this.hud.create({
 			coins: 0,
-			score: this.score,
+			score: this.points,
 			time: this.timeRemaining,
 			stamina: PlayerController.maxStamina,
 			maxStamina: PlayerController.maxStamina
@@ -196,8 +205,10 @@ var gameState = {
 		ParticleEffects.burstAt(x, y);
 		AudioManager.playCoin();
 		this.coins++;
+		this.points += 23;
 		this.timeRemaining = Math.min(this.timeRemaining + GameConfig.TIME_BONUS_PER_COIN, GameConfig.TIME_LIMIT);
 		this.hud.updateCoins(this.coins);
+		this.hud.updateScore(this.points);
 		this.hud.showFloatingText(x, y, '+2s', '#44cc44');
 	},
 
@@ -206,7 +217,9 @@ var gameState = {
 			AudioManager.playLose();
 			this.coins -= GameConfig.GOBLIN_STEAL_COINS;
 			this.score += GameConfig.GOBLIN_STEAL_COINS;
+			this.points += 5;
 			this.hud.updateCoins(this.coins);
+			this.hud.updateScore(this.points);
 			this.hud.showFloatingText(PlayerController.sprite.x, PlayerController.sprite.y, '-' + GameConfig.GOBLIN_STEAL_COINS, '#ff4444');
 			PlayerController.sprite.x = this._startPosition.x;
 			PlayerController.sprite.y = this._startPosition.y;
@@ -220,8 +233,8 @@ var gameState = {
 	_onKeyCollected: function(x, y){
 		ParticleEffects.burstAt(x, y);
 		AudioManager.playCoin();
-		this.coins++;
-		this.hud.updateCoins(this.coins);
+		this.points += 100;
+		this.hud.updateScore(this.points);
 		this.hud.showKeyIcon();
 		this.hud.showMessage('Uma porta foi destrancada!');
 	},

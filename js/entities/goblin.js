@@ -13,7 +13,7 @@ var GoblinFactory = {
 
 	// cria um unico goblin na posicao indicada
 	// retorna { sprite, ai } para a EnemyManager gerenciar
-	create: function(spawnX, spawnY, maze){
+	create: function(spawnX, spawnY, maze, onLostPlayer){
 		var tileSize = GameConfig.TILE_SIZE;
 
 		var sprite = game.add.sprite(spawnX, spawnY, 'enemy');
@@ -26,7 +26,7 @@ var GoblinFactory = {
 		sprite.animations.add('goRight', [24,25,26,27,28,29,30,31], 12, true);
 		sprite.direction = 'DOWN';
 
-		var ai = new GoblinAI(maze, sprite);
+		var ai = new GoblinAI(maze, sprite, onLostPlayer);
 
 		return { sprite: sprite, ai: ai };
 	}
