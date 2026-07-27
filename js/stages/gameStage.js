@@ -76,6 +76,7 @@ var stage1State = {
 
 		this._map.data.maze[this._map.doorPosition.row][this._map.doorPosition.col] = 1;
 
+		this.coins = 0;
 		this.pauseCooldown = false;
 	},
 
