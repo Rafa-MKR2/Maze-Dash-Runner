@@ -1,19 +1,15 @@
-// Stage1 - orquestrador da fase.
-// Seu papel e apenas: carregar mapa, inicializar sistemas, atualizar sistemas.
-// Toda logica especifica vive em modulos proprios.
 var stage1State = {
 
 	create: function(){
 		SettingsManager.load();
 		PlayerData.load();
 
-		// carrega dados do estágio via Director.
-		// o Director escolhe a variação, quantidade de moedas,
-		// goblins e música — tudo previamente desenhado manualmente.
 		var map = Director.getStage(1);
 		var tileSize = GameConfig.TILE_SIZE;
 
-		this.blocks = this.buildMap(map.data, tileSize);
+		var result = MapBuilder.build(map.data, tileSize);
+		this.blocks = result.blocks;
+		this.startPosition = result.startPosition;
 
 		PlayerController.create(this.startPosition.x, this.startPosition.y);
 
@@ -25,7 +21,7 @@ var stage1State = {
 
 		EnemyManager.create(map.enemySpawns, map.enemyType, map.data.maze);
 
-		var tilePositions = this.getWalkablePositions(map.data.maze, tileSize);
+		var tilePositions = MapBuilder.getWalkablePositions(map.data.maze, tileSize);
 		this.coinManager = new CoinManager(map.data.maze, tilePositions);
 		this.coinManager.spawn(map.coinCount);
 
@@ -38,75 +34,13 @@ var stage1State = {
 			onQuit: function(){ AudioManager.stop(); game.state.start('menu'); }
 		});
 
-		this.createHUD();
+		this.coins = 0;
+		this.score = 0;
+		this.timeRemaining = GameConfig.TIME_LIMIT;
+		this.hud = new StageHUD();
+		this.hud.create(this.coins, this.score, this.timeRemaining);
 		this.pauseCooldown = false;
 	},
-
-	// constroi o labirinto a partir dos dados do mapa
-	// retorna o grupo de blocos para colisao
-	buildMap: function(map, tileSize){
-		var maze = map.maze;
-
-		game.add.sprite(0, 0, 'bg');
-
-		this.renderGround(maze, tileSize);
-
-		var blocks = game.add.group();
-		blocks.enableBody = true;
-
-		for(var row = 0; row < maze.length; row++){
-			for(var col = 0; col < maze[row].length; col++){
-				var tile = maze[row][col];
-				var x = col * tileSize;
-				var y = row * tileSize;
-
-				if(tile === 1){
-					var block = blocks.create(x, y, 'block');
-					block.body.immovable = true;
-				} else
-				if(tile === 2){
-					this.startPosition = { x: x + tileSize / 2, y: y + tileSize / 2 };
-				}
-			}
-		}
-
-		return blocks;
-	},
-
-	renderGround: function(maze, tileSize) {
-		var groundKeys = ['ground_grass00', 'ground_grass01', 'ground_grass02', 'ground_grass03'];
-
-		for(var row = 0; row < maze.length; row++){
-			for(var col = 0; col < maze[row].length; col++){
-				if(maze[row][col] === 1) continue; // paredes não recebem ground
-
-				var x = col * tileSize;
-				var y = row * tileSize;
-				var key = groundKeys[Math.floor(Math.random() * groundKeys.length)];
-				var ground = game.add.sprite(x, y, key);
-				ground.scale.set(tileSize / ground.width, tileSize / ground.height);
-			}
-		}
-	},
-
-	// retorna posicoes walkable (sem parede, sem player) para spawn de moedas
-	// retorna posicoes walkable (sem parede, sem player) para spawn de moedas
-	getWalkablePositions: function(maze, tileSize){
-		var positions = [];
-		for(var row = 0; row < maze.length; row++){
-			for(var col = 0; col < maze[row].length; col++){
-				if(maze[row][col] !== 1 && maze[row][col] !== 2){
-					positions.push({
-						x: col * tileSize + tileSize / 2,
-						y: row * tileSize + tileSize / 2
-					});
-				}
-			}
-		}
-		return positions;
-	},
-
-	// --- UPDATE ---
 
 	update: function(){
 		TouchControls.update();
@@ -122,9 +56,8 @@ var stage1State = {
 			this.timeoutGameOver();
 			return;
 		}
-		this.txtTimer.text = 'TEMPO: ' + Utils.formatTime(Math.max(0, this.timeRemaining));
-
-		this.updateStaminaBar();
+		this.hud.updateTimer(this.timeRemaining);
+		this.hud.updateStamina();
 
 		if(PlayerController.escKey.isDown && !this.pauseCooldown){
 			PauseUI.pause(PlayerController.sprite, EnemyManager.sprites);
@@ -141,8 +74,6 @@ var stage1State = {
 		EnemyManager.update(PlayerController.sprite, this.coinManager);
 	},
 
-	// player coleta moedas
-	// player coleta moedas
 	checkCoinCollisions: function(){
 		var coins = this.coinManager.coins;
 		for(var i = 0; i < coins.length; i++){
@@ -151,8 +82,6 @@ var stage1State = {
 		}
 	},
 
-	// goblins coletam moedas e tocam no player
-	// goblins coletam moedas e tocam no player
 	checkEnemyCollisions: function(){
 		var coins = this.coinManager.coins;
 		var enemies = EnemyManager.sprites;
@@ -169,8 +98,6 @@ var stage1State = {
 		}
 	},
 
-	// --- CALLBACKS DE COLISAO ---
-
 	playerCollectCoin: function(player, coin){
 		var result = this.coinManager.collect(coin);
 		if(!result.collected) return;
@@ -179,10 +106,10 @@ var stage1State = {
 		AudioManager.playCoin();
 
 		this.coins++;
-		this.txtCoins.text = 'MOEDAS: ' + Utils.formatNumber(this.coins, 3);
+		this.hud.updateCoins(this.coins);
 
 		this.timeRemaining = Math.min(this.timeRemaining + GameConfig.TIME_BONUS_PER_COIN, GameConfig.TIME_LIMIT);
-		this.showFloatingText(result.x, result.y, '+2s', '#44cc44');
+		this.hud.showFloatingText(result.x, result.y, '+2s', '#44cc44');
 	},
 
 	goblinCollectCoin: function(enemy, coin){
@@ -196,9 +123,9 @@ var stage1State = {
 			AudioManager.playLose();
 			this.coins -= GameConfig.GOBLIN_STEAL_COINS;
 			this.score += GameConfig.GOBLIN_STEAL_COINS;
-			this.txtCoins.text = 'MOEDAS: ' + Utils.formatNumber(this.coins, 3);
+			this.hud.updateCoins(this.coins);
 
-			this.showFloatingText(PlayerController.sprite.x, PlayerController.sprite.y, '-' + GameConfig.GOBLIN_STEAL_COINS, '#ff4444');
+			this.hud.showFloatingText(PlayerController.sprite.x, PlayerController.sprite.y, '-' + GameConfig.GOBLIN_STEAL_COINS, '#ff4444');
 
 			PlayerController.sprite.x = this.startPosition.x;
 			PlayerController.sprite.y = this.startPosition.y;
@@ -214,78 +141,6 @@ var stage1State = {
 		PlayerData.recordGame(this.coins, GameConfig.TIME_LIMIT - this.timeRemaining);
 
 		game.state.start('end', true, false, { score: this.coins, time: this.timeRemaining, thiefScore: this.score });
-	},
-
-	// --- HUD ---
-
-	createHUD: function(){
-		this.txtCoins = game.add.text(15, 15, 'MOEDAS: ' + Utils.formatNumber(this.coins, 3), {
-			font: '15px emulogic', fill: '#fff'
-		});
-		this.txtCoins.fixedToCamera = true;
-
-		this.txtScore = game.add.text(15, 32, 'PONTUACAO: ' + Utils.formatNumber(this.score, 3), {
-			font: '15px emulogic', fill: '#fff'
-		});
-		this.txtScore.fixedToCamera = true;
-
-		this.txtTimer = game.add.text(game.camera.width - 15, 15, 'TEMPO: ' + Utils.formatTime(GameConfig.TIME_LIMIT), {
-			font: '15px emulogic', fill: '#fff'
-		});
-		this.txtTimer.anchor.set(1, 0);
-		this.txtTimer.fixedToCamera = true;
-
-		this.staminaBarBg = game.add.graphics();
-		this.staminaBarBg.fixedToCamera = true;
-		this.staminaBarFill = game.add.graphics();
-		this.staminaBarFill.fixedToCamera = true;
-		this.updateStaminaBar();
-	},
-
-	// atualiza a barra de estamina na HUD
-	updateStaminaBar: function(){
-		var barX = 15;
-		var barY = 65;
-		var barW = 120;
-		var barH = 12;
-		var ratio = PlayerController.stamina / PlayerController.maxStamina;
-
-		this.staminaBarBg.clear();
-		this.staminaBarBg.beginFill(0x000000, 0.6);
-		this.staminaBarBg.drawRect(barX - 1, barY - 1, barW + 2, barH + 2);
-		this.staminaBarBg.endFill();
-
-		var fillColor = 0x4488cc;
-		if(ratio < 0.33) fillColor = 0xcc4444;
-		else if(ratio < 0.66) fillColor = 0xcccc44;
-
-		this.staminaBarFill.clear();
-		this.staminaBarFill.beginFill(fillColor);
-		this.staminaBarFill.drawRect(barX, barY, barW * ratio, barH);
-		this.staminaBarFill.endFill();
-
-		if(PlayerController.isFatigued){
-			var flashing = Math.floor(game.time.now / 300) % 2 === 0;
-			this.staminaBarFill.clear();
-			this.staminaBarFill.beginFill(flashing ? 0xff0000 : 0x330000);
-			this.staminaBarFill.drawRect(barX, barY, barW * ratio, barH);
-			this.staminaBarFill.endFill();
-		} else {
-			this.staminaBarFill.clear();
-			this.staminaBarFill.beginFill(fillColor);
-			this.staminaBarFill.drawRect(barX, barY, barW * ratio, barH);
-			this.staminaBarFill.endFill();
-		}
-	},
-
-	// texto flutuante temporario para feedback visual
-	showFloatingText: function(x, y, text, color){
-		var t = game.add.text(x, y, text, {
-			font: '13px emulogic', fill: color
-		});
-		t.anchor.set(0.5);
-		game.add.tween(t).to({ y: y - 30, alpha: 0 }, GameConfig.FLOAT_TEXT_DURATION, Phaser.Easing.Linear.None, true);
-		game.time.events.add(GameConfig.FLOAT_TEXT_DURATION, function(){ t.destroy(); }, this);
 	},
 
 	timeoutGameOver: function(){
