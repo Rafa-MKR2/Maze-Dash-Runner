@@ -22,48 +22,48 @@ var endState = {
 
 		if(this.reason === 'timeout'){
 			game.add.text(cx, cy - 180, 'TEMPO ESGOTADO', {
-				font: '20px emulogic', fill: '#ff4444'
+				font: '20px ' + GameConfig.UI_FONT, fill: '#ff4444'
 			}).anchor.set(.5);
 		} else if(this.reason === 'coin'){
 			game.add.text(cx, cy - 180, 'PEGO POR GOBLIN', {
-				font: '20px emulogic', fill: '#ff4444'
+				font: '20px ' + GameConfig.UI_FONT, fill: '#ff4444'
 			}).anchor.set(.5);
 		}
 
 		game.add.text(cx, cy - 130, 'GAME OVER', {
-			font: '36px emulogic', fill: '#fff'
+			font: '36px ' + GameConfig.UI_FONT, fill: '#fff'
 		}).anchor.set(.5);
 
 		game.add.text(cx, cy - 50, 'MOEDAS: ' + Utils.formatNumber(this.score, 3), {
-			font: '20px emulogic', fill: '#fff'
+			font: '20px ' + GameConfig.UI_FONT, fill: '#fff'
 		}).anchor.set(.5);
 
 		// pontuacao (pontuacao por roubo de goblin)
 		if(this.thiefScore > 0){
 			game.add.text(cx, cy - 10, 'PONTUACAO: ' + Utils.formatNumber(this.thiefScore, 3), {
-				font: '18px emulogic', fill: '#ffff00'
+				font: '18px ' + GameConfig.UI_FONT, fill: '#ffff00'
 			}).anchor.set(.5);
 		}
 
 		game.add.text(cx, cy + 30, 'TEMPO: ' + Utils.formatTime(this.time), {
-			font: '20px emulogic', fill: '#fff'
+			font: '20px ' + GameConfig.UI_FONT, fill: '#fff'
 		}).anchor.set(.5);
 
 		// melhores recordes
 		game.add.text(cx, cy + 90, 'MELHOR PONTUACAO: ' + Utils.formatNumber(PlayerData.stats.bestScore, 3), {
-			font: '15px emulogic', fill: '#aaa'
+			font: '15px ' + GameConfig.UI_FONT, fill: '#aaa'
 		}).anchor.set(.5);
 
 		game.add.text(cx, cy + 120, 'MELHOR TEMPO: ' + Utils.formatTime(PlayerData.stats.bestTime), {
-			font: '15px emulogic', fill: '#aaa'
+			font: '15px ' + GameConfig.UI_FONT, fill: '#aaa'
 		}).anchor.set(.5);
 
 		game.add.text(cx, cy + 180, 'ENTER PARA REINICIAR', {
-			font: '15px emulogic', fill: '#fff'
+			font: '15px ' + GameConfig.UI_FONT, fill: '#fff'
 		}).anchor.set(.5);
 
 		game.add.text(cx, cy + 220, 'ESC PARA MENU', {
-			font: '15px emulogic', fill: '#fff'
+			font: '15px ' + GameConfig.UI_FONT, fill: '#fff'
 		}).anchor.set(.5);
 
 		var enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);

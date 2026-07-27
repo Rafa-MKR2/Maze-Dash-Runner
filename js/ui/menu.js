@@ -39,12 +39,12 @@ var menuState = {
 		}
 
 		// centraliza na tela independente da posição da câmera
-		var cx = game.camera.view.centerX;
-		var cy = game.camera.view.centerY;
+		this.cx = game.camera.view.centerX;
+		this.cy = game.camera.view.centerY;
 
 		// titulo
-		this.title = game.add.text(cx, -50, 'MAZE DASH RUNNER', {
-			font: '36px emulogic', fill: '#fff'
+		this.title = game.add.text(this.cx, -50, 'MAZE DASH RUNNER', {
+			font: '36px ' + GameConfig.UI_FONT, fill: '#fff'
 		});
 		this.title.anchor.set(.5);
 		game.add.tween(this.title).to({y: 60}, 800, Phaser.Easing.Quadratic.Out, true);
@@ -67,8 +67,8 @@ var menuState = {
 		var spacing = 40;
 
 		for(var i = 0; i < this.menuItems.length; i++){
-			var txt = game.add.text(cx, 550, this.menuItems[i].label, {
-				font: '20px emulogic', fill: '#fff'
+			var txt = game.add.text(this.cx, 550, this.menuItems[i].label, {
+				font: '20px ' + GameConfig.UI_FONT, fill: '#fff'
 			});
 			txt.anchor.set(.5);
 			var delay = 200 + i * 100;
@@ -210,8 +210,8 @@ var menuState = {
 			window._menuMusic = null;
 		}
 
-		this.quitText = game.add.text(cx, cy, 'OBRIGADO POR JOGAR!', {
-			font: '20px emulogic', fill: '#fff'
+		this.quitText = game.add.text(this.cx, this.cy, 'OBRIGADO POR JOGAR!', {
+			font: '20px ' + GameConfig.UI_FONT, fill: '#fff'
 		});
 		this.quitText.anchor.set(.5);
 

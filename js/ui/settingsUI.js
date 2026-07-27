@@ -6,7 +6,6 @@ var SettingsOverlay = {
 	isOpen: false,
 	selectedIndex: 0,
 	inputReady: false,
-	returnState: 'menu',
 	onClose: null,
 
 	group: null,
@@ -28,7 +27,6 @@ var SettingsOverlay = {
 
 	open: function(config){
 		config = config || {};
-		this.returnState = config.returnState || 'menu';
 		this.onClose = config.onClose || null;
 		this.selectedIndex = 0;
 		this.inputReady = false;
@@ -74,7 +72,7 @@ var SettingsOverlay = {
 		bg.endFill();
 
 		game.add.text(game.world.centerX, 60, 'CONFIGURACOES', {
-			font: '36px emulogic', fill: '#fff'
+			font: '36px ' + GameConfig.UI_FONT, fill: '#fff'
 		}, this.group).anchor.set(.5);
 
 		this.labels = [];
@@ -86,14 +84,14 @@ var SettingsOverlay = {
 			var opt = this.visibleOptions[i];
 
 			var lbl = game.add.text(game.world.centerX - 180, startY + i * spacing, opt.label, {
-				font: '20px emulogic', fill: '#fff'
+				font: '20px ' + GameConfig.UI_FONT, fill: '#fff'
 			}, this.group);
 			lbl.anchor.set(0, 0.5);
 			this.labels.push(lbl);
 
 			var valText = this.getValueText(opt);
 			var val = game.add.text(game.world.centerX + 180, startY + i * spacing, valText, {
-				font: '20px emulogic', fill: '#fff'
+				font: '20px ' + GameConfig.UI_FONT, fill: '#fff'
 			}, this.group);
 			val.anchor.set(1, 0.5);
 			this.values.push(val);

@@ -45,11 +45,14 @@ var AudioManager = {
 	},
 
 	// som de navegacao em menus - reutilizavel por qualquer tela
+	sndTick: null,
 	playTick: function(){
 		if(!SettingsManager.get('sfx')) return;
-		var tick = game.add.audio('getitem');
-		tick.volume = 0.2;
-		tick.play();
+		if(!this.sndTick){
+			this.sndTick = game.add.audio('getitem');
+			this.sndTick.volume = 0.2;
+		}
+		this.sndTick.play();
 	},
 
 	pause: function(){

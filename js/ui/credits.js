@@ -3,7 +3,7 @@ var creditsState = {
 	create: function(){
 		// titulo
 		game.add.text(game.world.centerX, 50, 'CREDITOS', {
-			font: '36px emulogic', fill: '#fff'
+			font: '36px ' + GameConfig.UI_FONT, fill: '#fff'
 		}).anchor.set(.5);
 
 		// personagens decorativos correndo pela tela
@@ -13,15 +13,15 @@ var creditsState = {
 		var centerX = game.world.centerX;
 
 		game.add.text(centerX, 155, 'MAZE DASH RUNNER', {
-			font: '24px emulogic', fill: '#fff'
+			font: '24px ' + GameConfig.UI_FONT, fill: '#fff'
 		}).anchor.set(.5);
 
 		game.add.text(centerX, 215, 'CRIADO POR', {
-			font: '16px emulogic', fill: '#aaa'
+			font: '16px ' + GameConfig.UI_FONT, fill: '#aaa'
 		}).anchor.set(.5);
 
 		game.add.text(centerX, 250, 'RAFAEL DO CARMO', {
-			font: '20px emulogic', fill: '#fff'
+			font: '20px ' + GameConfig.UI_FONT, fill: '#fff'
 		}).anchor.set(.5);
 
 		// moeda decorativa separadora
@@ -32,12 +32,12 @@ var creditsState = {
 		sep.animations.add('spin', [0,1,2,3,4,5,6,7,8,9], 10, true).play();
 
 		game.add.text(centerX, 345, '2026 RAFAEL DO CARMO', {
-			font: '14px emulogic', fill: '#aaa'
+			font: '14px ' + GameConfig.UI_FONT, fill: '#aaa'
 		}).anchor.set(.5);
 
 		// voltar com moeda indicadora
 		this.txtBack = game.add.text(centerX, 430, 'VOLTAR', {
-			font: '20px emulogic', fill: '#fff'
+			font: '20px ' + GameConfig.UI_FONT, fill: '#fff'
 		});
 		this.txtBack.anchor.set(.5);
 

@@ -15,6 +15,7 @@ var Utils = {
 	},
 
 	formatNumber: function(value, digits){
+		if(value === null || value === undefined) return '';
 		var str = value.toString();
 		while(str.length < digits) str = '0' + str;
 		return str;

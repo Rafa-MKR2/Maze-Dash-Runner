@@ -4,7 +4,7 @@ var recordsState = {
 		PlayerData.load();
 
 		game.add.text(game.world.centerX, 60, 'RECORDES', {
-			font: '36px emulogic', fill: '#fff'
+			font: '36px ' + GameConfig.UI_FONT, fill: '#fff'
 		}).anchor.set(.5);
 
 		var startY = 10;
@@ -20,16 +20,16 @@ var recordsState = {
 
 		for(var i = 0; i < lines.length; i++){
 			game.add.text(30, startY + i * spacing, lines[i].label, {
-				font: '18px emulogic', fill: '#fff'
+				font: '18px ' + GameConfig.UI_FONT, fill: '#fff'
 			});
 			game.add.text(game.width - 30, startY + i * spacing, lines[i].value, {
-				font: '18px emulogic', fill: '#fff'
+				font: '18px ' + GameConfig.UI_FONT, fill: '#fff'
 			}).anchor.set(1, 0);
 		}
 
 		// voltar
 		this.txtBack = game.add.text(game.world.centerX, startY + lines.length * spacing + 40, 'VOLTAR', {
-			font: '20px emulogic', fill: '#fff'
+			font: '20px ' + GameConfig.UI_FONT, fill: '#fff'
 		});
 		this.txtBack.anchor.set(.5);
 

@@ -48,7 +48,7 @@ var PauseUI = {
 		bg.endFill();
 
 		game.add.text(game.world.centerX, 100, 'PAUSADO', {
-			font: '36px emulogic', fill: '#fff'
+			font: '36px ' + GameConfig.UI_FONT, fill: '#fff'
 		}, this.pauseGroup).anchor.set(.5);
 
 		var pauseOptions = ['CONTINUAR', 'REINICIAR', 'CONFIGURACOES', 'VOLTAR AO MENU'];
@@ -57,7 +57,7 @@ var PauseUI = {
 		var spacing = 50;
 		for(var i = 0; i < pauseOptions.length; i++){
 			var txt = game.add.text(game.world.centerX, startY + i * spacing, pauseOptions[i], {
-				font: '20px emulogic', fill: '#fff'
+				font: '20px ' + GameConfig.UI_FONT, fill: '#fff'
 			}, this.pauseGroup);
 			txt.anchor.set(.5);
 			this.pauseTexts.push(txt);
@@ -86,7 +86,7 @@ var PauseUI = {
 		bg.endFill();
 
 		game.add.text(game.world.centerX, 170, 'REINICIAR FASE?', {
-			font: '24px emulogic', fill: '#fff'
+			font: '24px ' + GameConfig.UI_FONT, fill: '#fff'
 		}, this.confirmGroup).anchor.set(.5);
 
 		var confirmOptions = ['SIM', 'NAO'];
@@ -95,7 +95,7 @@ var PauseUI = {
 		var spacing = 50;
 		for(var i = 0; i < confirmOptions.length; i++){
 			var txt = game.add.text(game.world.centerX, startY + i * spacing, confirmOptions[i], {
-				font: '20px emulogic', fill: '#fff'
+				font: '20px ' + GameConfig.UI_FONT, fill: '#fff'
 			}, this.confirmGroup);
 			txt.anchor.set(.5);
 			this.confirmTexts.push(txt);
