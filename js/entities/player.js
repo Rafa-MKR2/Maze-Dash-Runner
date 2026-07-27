@@ -28,6 +28,9 @@ var PlayerController = {
 		this.sprite.body.setSize(16, 18, 4, 14);
 
 		this.sprite.animations.add('goDown', [0,1,2,3,4,5,6,7], 12, true);
+		this.sprite.animations.add('goUp', [8,9,10,11,12,13,14,15], 12, true);
+		this.sprite.animations.add('goLeft', [16,17,18,19,20,21,22,23], 12, true);
+		this.sprite.animations.add('goRight', [24,25,26,27,28,29,30,31], 12, true);
 		this.sprite.lastDirection = null;
 
 		var cursorKeys = game.input.keyboard.createCursorKeys();
