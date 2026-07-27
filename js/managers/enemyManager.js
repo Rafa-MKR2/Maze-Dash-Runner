@@ -7,10 +7,6 @@ var EnemyManager = {
 	sprites: [],
 	ais: [],
 
-	// cria todos os inimigos do nivel baseado na configuracao do mapa
-	// spawnPositions: array de { row, col }
-	// enemyType: string ('goblin', futuro 'slime', etc)
-	// maze: array do labirinto para a IA
 	create: function(spawnPositions, enemyType, maze){
 		var tileSize = GameConfig.TILE_SIZE;
 		this.sprites = [];
@@ -37,8 +33,6 @@ var EnemyManager = {
 		}
 	},
 
-	// retorna a factory de inimigos baseado no tipo
-	// para adicionar novos inimigos, basta adicionar um novo caso aqui
 	getFactory: function(type){
 		switch(type){
 			case 'goblin': return GoblinFactory;
@@ -46,14 +40,12 @@ var EnemyManager = {
 		}
 	},
 
-	// atualiza IA de todos os inimigos e verifica coleta de moedas
 	update: function(player, coinManager){
 		for(var i = 0; i < this.sprites.length; i++){
 			this.ais[i].update(player, coinManager);
 		}
 	},
 
-	// para animacoes na pausa
 	stopAll: function(){
 		for(var i = 0; i < this.sprites.length; i++){
 			this.sprites[i].animations.stop();

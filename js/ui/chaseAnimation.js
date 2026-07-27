@@ -84,17 +84,15 @@ var ChaseAnimation = {
 		anim.enemy.y = baseY;
 	},
 
-	// atualiza movimentacao e animacoes a cada frame
 	update: function(anim, includeCoin){
 		var dt = game.time.physicsElapsed;
 
-		// moeda lidera - movimento livre
 		if(includeCoin && anim.coin){
 			anim.coin.x += anim.coin.speedX * dt;
 			anim.coin.y += anim.coin.speedY * dt;
 		}
 
-		// player persegue - desacelera ao chegar perto para nunca alcancar
+		// no credits, player corre livremente
 		if(includeCoin && anim.coin){
 			var dxCoin = anim.coin.x - anim.player.x;
 			var dyCoin = anim.coin.y - anim.player.y;
@@ -109,7 +107,6 @@ var ChaseAnimation = {
 			anim.player.x += anim.player.speedX * dt;
 		}
 
-		// goblin persegue o player - desacelera ao chegar perto
 		var dxPlayer = anim.player.x - anim.enemy.x;
 		var dyPlayer = anim.player.y - anim.enemy.y;
 		var distPlayer = Math.sqrt(dxPlayer * dxPlayer + dyPlayer * dyPlayer);
@@ -119,7 +116,6 @@ var ChaseAnimation = {
 			anim.enemy.y += (dyPlayer / distPlayer) * anim.enemy.chaseSpeed * dt * 0.3 * mul2;
 		}
 
-		// animacao baseada na direcao horizontal
 		if(includeCoin && anim.coin){
 			var dxCoin2 = anim.coin.x - anim.player.x;
 			if(dxCoin2 > 8){
@@ -141,12 +137,10 @@ var ChaseAnimation = {
 			anim.enemy.animations.play('runLeft');
 		}
 
-		// manter dentro da faixa vertical visivel
 		for(var i = 0; i < anim.sprites.length; i++){
 			anim.sprites[i].y = Phaser.Math.clamp(anim.sprites[i].y, 80, game.height - 30);
 		}
 
-		// todos sairam da tela -> respawn em grupo
 		var allOffRight = true;
 		var allOffLeft = true;
 		for(var i = 0; i < anim.sprites.length; i++){

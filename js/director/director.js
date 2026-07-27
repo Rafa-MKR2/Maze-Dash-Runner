@@ -30,10 +30,6 @@ var Director = {
 				variations = [Stage01Variation01];
 		}
 
-		// Diretor do caos.
-		// Hoje resolveu pegar leve.
-		// Talvez.
-		// Variações com maze vazio são ignoradas automaticamente.
 		var validVariations = [];
 		for(var i = 0; i < variations.length; i++){
 			if(variations[i].maze.length > 0){
@@ -82,7 +78,6 @@ var Director = {
 		var errors = [];
 		var warnings = [];
 
-		// verifica se todas as linhas têm o mesmo tamanho
 		var expectedLen = maze[0] ? maze[0].length : 0;
 		for(var i = 1; i < maze.length; i++){
 			if(maze[i].length !== expectedLen){
@@ -90,7 +85,6 @@ var Director = {
 			}
 		}
 
-		// encontra a posição do jogador (tile 2) e verifica se existe
 		var playerRow = -1, playerCol = -1;
 		var playerFound = false;
 		for(var r = 0; r < maze.length; r++){
@@ -106,8 +100,6 @@ var Director = {
 			errors.push('Mapa não possui posição inicial do jogador (tile 2 não encontrado)');
 		}
 
-		// verifica se algum spawn de inimigo está em uma parede (tile 1)
-		// ou ocupa o mesmo tile do jogador
 		var spawns = variation.enemySpawns || [];
 		for(var s = 0; s < spawns.length; s++){
 			var spawn = spawns[s];
@@ -128,7 +120,6 @@ var Director = {
 			}
 		}
 
-		// reporta no console diferenciando erro de aviso
 		for(var e = 0; e < errors.length; e++){
 			console.error('[Director] Erro em "' + name + '": ' + errors[e]);
 		}

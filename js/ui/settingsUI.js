@@ -9,7 +9,6 @@ var SettingsOverlay = {
 	returnState: 'menu',
 	onClose: null,
 
-	// referencias de UI
 	group: null,
 	labels: [],
 	values: [],
@@ -27,10 +26,6 @@ var SettingsOverlay = {
 		{ label: 'VOLTAR',     type: 'action', key: 'back' }
 	],
 
-	// abre o overlay
-	// config: { returnState, onClose }
-	// returnState: para onde voltar ao fechar (default: 'menu')
-	// onClose: callback opcional chamado ao fechar
 	open: function(config){
 		config = config || {};
 		this.returnState = config.returnState || 'menu';
@@ -45,7 +40,6 @@ var SettingsOverlay = {
 		// resolve bug: musica paused do pause nao reseta ao abrir settings
 		this.applyMusicState();
 
-		// controles de teclado (+ touch se mobile)
 		var cursorKeys = game.input.keyboard.createCursorKeys();
 		this.enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
 		this.escKey = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
@@ -60,36 +54,29 @@ var SettingsOverlay = {
 
 		this.isOpen = true;
 
-		// liberar input apos breve delay
 		game.time.events.add(300, function(){
 			this.inputReady = true;
 		}, this);
 	},
 
-	// constroi toda a interface visual do overlay
-	// em mobile, oculta opcao de tela cheia (sempre fullscreens)
 	buildUI: function(){
 		this.group = game.add.group();
 
-		// filtrar opcoes visiveis conforme dispositivo
 		this.visibleOptions = [];
 		for(var i = 0; i < this.options.length; i++){
 			if(this.options[i].key === 'fullscreen' && GameConfig.isMobile) continue;
 			this.visibleOptions.push(this.options[i]);
 		}
 
-		// fundo escuro semitransparente
 		var bg = game.add.graphics(0, 0, this.group);
 		bg.beginFill(0x000000, 0.7);
 		bg.drawRect(0, 0, game.width, game.height);
 		bg.endFill();
 
-		// titulo
 		game.add.text(game.world.centerX, 60, 'CONFIGURACOES', {
 			font: '36px emulogic', fill: '#fff'
 		}, this.group).anchor.set(.5);
 
-		// linhas de opcao
 		this.labels = [];
 		this.values = [];
 		var startY = 150;
@@ -123,7 +110,6 @@ var SettingsOverlay = {
 		this.updateCoinPosition();
 	},
 
-	// retorna o texto exibido para cada tipo de opcao
 	getValueText: function(opt){
 		if(opt.type === 'toggle'){
 			return SettingsManager.get(opt.key) ? '[ON]' : '[OFF]';
@@ -141,14 +127,12 @@ var SettingsOverlay = {
 		return '';
 	},
 
-	// atualiza todos os textos de valor
 	updateValues: function(){
 		for(var i = 0; i < this.visibleOptions.length; i++){
 			this.values[i].text = this.getValueText(this.visibleOptions[i]);
 		}
 	},
 
-	// atualiza posicao da moeda indicadora
 	updateCoinPosition: function(){
 		var target = this.labels[this.selectedIndex];
 		this.menuCoin.x = target.x - 25;
@@ -157,7 +141,6 @@ var SettingsOverlay = {
 		this.menuCoin.visible = true;
 	},
 
-	// fecha o overlay e chama callback
 	close: function(){
 		if(this.group){
 			this.group.destroy(true);
@@ -168,7 +151,6 @@ var SettingsOverlay = {
 		this.menuCoin = null;
 		this.isOpen = false;
 
-		// executar callback antes de navegar
 		if(this.onClose){
 			this.onClose();
 			this.onClose = null;
@@ -184,7 +166,6 @@ var SettingsOverlay = {
 		}
 	},
 
-	// chamado a cada frame pela cena que esta ativa
 	update: function(){
 		if(!this.isOpen || !this.inputReady) return;
 
@@ -211,7 +192,6 @@ var SettingsOverlay = {
 
 		var opt = this.visibleOptions[this.selectedIndex];
 
-		// toggle: esquerda/direita
 		if(opt.type === 'toggle'){
 			if(this.cursors.left.isDown){
 				SettingsManager.set(opt.key, false);
@@ -229,7 +209,6 @@ var SettingsOverlay = {
 			}
 		}
 
-		// slider: esquerda/direita
 		if(opt.type === 'slider'){
 			if(this.cursors.left.isDown){
 				var vol = SettingsManager.get('volume');
@@ -249,7 +228,6 @@ var SettingsOverlay = {
 			}
 		}
 
-		// acao: voltar
 		if(opt.type === 'action' && opt.key === 'back'){
 			if(this.enterKey.isDown){
 				AudioManager.playTick();
@@ -259,7 +237,6 @@ var SettingsOverlay = {
 			}
 		}
 
-		// ESC em qualquer opcao fecha o overlay
 		if(this.escKey.isDown){
 			AudioManager.playTick();
 			this.close();
@@ -267,8 +244,6 @@ var SettingsOverlay = {
 		}
 	},
 
-	// aplica volume da musica em tempo real
-	// ajusta menu e/ou fase conforme contexto atual
 	applyMusicVolume: function(){
 		var vol = SettingsManager.get('volume') / 100 * 0.5;
 
@@ -276,15 +251,12 @@ var SettingsOverlay = {
 			window._menuMusic.volume = vol;
 		}
 
-		// durante gameplay, ajustar musica da fase tambem
 		if(this.onClose && AudioManager.music && AudioManager.music.isPlaying){
 			AudioManager.music.volume = vol;
 		}
 	},
 
 	// liga ou desliga musica conforme configuracao
-	// durante gameplay (onClose definido) controla a musica da fase
-	// no menu controla a musica do menu
 	applyMusicState: function(){
 		var musicOn = SettingsManager.get('music');
 		var vol = SettingsManager.get('volume') / 100 * 0.5;
@@ -321,7 +293,6 @@ var SettingsOverlay = {
 		}
 	},
 
-	// roda o efeito correto ao alterar um toggle
 	applyToggleEffect: function(key){
 		if(key === 'music'){
 			this.applyMusicState();
@@ -331,8 +302,6 @@ var SettingsOverlay = {
 		}
 	},
 
-	// aplica fullscreen conforme configuracao
-	// so funciona em desktop (mobile sempre fullscreen)
 	applyFullscreen: function(){
 		if(GameConfig.isMobile) return;
 		if(!GameConfig.fullscreenEnabled) return;

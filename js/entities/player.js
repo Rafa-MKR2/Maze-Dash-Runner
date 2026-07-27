@@ -8,19 +8,15 @@ var PlayerController = {
 	escKey: null,
 	sprintKey: null,
 
-	// estamina
 	stamina: 0,
 	maxStamina: 0,
 	isSprinting: false,
 	recoveryTimer: 0,
 
-	// fatigue state
 	isFatigued: false,
 
-	// invulnerability after teleport
 	invulnTimer: 0,
 
-	// cria o player na posicao indicada e configura animacoes
 	create: function(spawnX, spawnY){
 		this.sprite = game.add.sprite(spawnX, spawnY, 'player');
 		this.sprite.anchor.set(.5);
@@ -32,12 +28,8 @@ var PlayerController = {
 		this.sprite.body.setSize(16, 18, 4, 14);
 
 		this.sprite.animations.add('goDown', [0,1,2,3,4,5,6,7], 12, true);
-		this.sprite.animations.add('goUp', [8,9,10,11,12,13,14,15], 12, true);
-		this.sprite.animations.add('goLeft', [16,17,18,19,20,21,22,23], 12, true);
-		this.sprite.animations.add('goRight', [24,25,26,27,28,29,30,31], 12, true);
 		this.sprite.lastDirection = null;
 
-		// controles de teclado (+ touch se mobile)
 		var cursorKeys = game.input.keyboard.createCursorKeys();
 		this.enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
 		this.escKey = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
@@ -52,7 +44,6 @@ var PlayerController = {
 			this.controls = cursorKeys;
 		}
 
-		// inicializar estamina
 		this.maxStamina = GameConfig.STAMINA_MAX;
 		this.stamina = this.maxStamina;
 		this.isSprinting = false;
@@ -62,13 +53,11 @@ var PlayerController = {
 		return this.sprite;
 	},
 
-	// processa input, movimentacao, sprint e estamina
 	update: function(){
 		var s = this.sprite;
 		s.body.velocity.x = 0;
 		s.body.velocity.y = 0;
 
-		// --- SPRINT ---
 		var moving = this.controls.left.isDown || this.controls.right.isDown ||
 		             this.controls.up.isDown || this.controls.down.isDown;
 
@@ -97,14 +86,12 @@ var PlayerController = {
 			}
 		}
 
-		// countdown de invulnerabilidade apos teleporte
 		if(this.invulnTimer > 0){
 			this.invulnTimer -= game.time.physicsElapsed;
 		}
 
 		var speed = this.isSprinting ? GameConfig.SPRINT_SPEED : GameConfig.PLAYER_SPEED;
 
-		// --- MOVIMENTACAO ---
 		var movingX = false;
 		var movingY = false;
 
@@ -141,7 +128,6 @@ var PlayerController = {
 			s.lastDirection = 'y';
 		}
 
-		// animacao baseada na direcao do movimento
 		if(s.body.velocity.x < 0){
 			s.animations.play('goLeft');
 		} else if(s.body.velocity.x > 0){
@@ -155,7 +141,6 @@ var PlayerController = {
 		}
 	},
 
-	// zera velocidade (usado na pausa)
 	stop: function(){
 		this.sprite.body.velocity.x = 0;
 		this.sprite.body.velocity.y = 0;

@@ -13,59 +13,33 @@ var stage1State = {
 		var map = Director.getStage(1);
 		var tileSize = GameConfig.TILE_SIZE;
 
-		// constroi o labirinto: paredes, posicao do player, retorna grupo de blocos
 		this.blocks = this.buildMap(map.data, tileSize);
 
-		// inicializa player
 		PlayerController.create(this.startPosition.x, this.startPosition.y);
 
-		// configura o mundo e a câmera para suportar mapas maiores que a tela.
-		// o mundo tem o tamanho real do labirinto; a câmera segue o jogador
-		// mantendo-o centralizado e nunca mostrando fora dos limites.
 		var mapWidth = map.data.maze[0].length * tileSize;
 		var mapHeight = map.data.maze.length * tileSize;
 		game.world.setBounds(0, 0, mapWidth, mapHeight);
 		game.camera.follow(PlayerController.sprite, Phaser.Camera.FOLLOW_LOCKON);
 		game.camera.setBoundsToWorld();
 
-		// inicializa inimigos - EnemyManager decide qual factory usar
 		EnemyManager.create(map.enemySpawns, map.enemyType, map.data.maze);
 
-		// inicializa moedas
 		var tilePositions = this.getWalkablePositions(map.data.maze, tileSize);
 		this.coinManager = new CoinManager(map.data.maze, tilePositions);
 		this.coinManager.spawn(map.coinCount);
 
-		// inicializa sistemas de suporte
 		AudioManager.init(map.musicKey);
 		ParticleEffects.init();
 
-		// pausa - define o que cada acao faz
 		PauseUI.create({
 			onResume: function(){ AudioManager.resume(); },
 			onRestart: function(){ AudioManager.stop(); game.state.start('stage1'); },
 			onQuit: function(){ AudioManager.stop(); game.state.start('menu'); }
 		});
 
-		// placar, pontuacao e timer regressivo
-		this.coins = 0;
-		this.score = 0;
-		this.timeRemaining = GameConfig.TIME_LIMIT;
 		this.createHUD();
 		this.pauseCooldown = false;
-
-		// sincronizar estado de fullscreen quando muda externamente (ex: usuario apertou Escape)
-		if(GameConfig.fullscreenEnabled && GameConfig.fullscreenChange){
-			var self = this;
-			document.addEventListener(GameConfig.fullscreenChange, function(){
-				var isFs = !!GameConfig.fullscreenElement();
-				SettingsManager.set('fullscreen', isFs);
-				// atualizar UI do settings se estiver aberto
-				if(SettingsOverlay && SettingsOverlay.isOpen){
-					SettingsOverlay.updateValues();
-				}
-			});
-		}
 	},
 
 	// constroi o labirinto a partir dos dados do mapa
@@ -75,9 +49,6 @@ var stage1State = {
 
 		game.add.sprite(0, 0, 'bg');
 
-		// preenche o chão do labirinto com variações aleatórias de ground.
-		// tiles walkable (0, 2, 3) recebem um ground aleatório;
-		// paredes (1) não recebem ground — são cobertas pelos blocos.
 		this.renderGround(maze, tileSize);
 
 		var blocks = game.add.group();
@@ -102,9 +73,6 @@ var stage1State = {
 		return blocks;
 	},
 
-	// preenche o chão do labirinto com variações aleatórias de ground.
-	// segue a convenção de nomenclatura: nome_tipo + numero_de_variacao
-	// (ex.: ground_grass00, ground_grass01, etc.)
 	renderGround: function(maze, tileSize) {
 		var groundKeys = ['ground_grass00', 'ground_grass01', 'ground_grass02', 'ground_grass03'];
 
@@ -121,6 +89,7 @@ var stage1State = {
 		}
 	},
 
+	// retorna posicoes walkable (sem parede, sem player) para spawn de moedas
 	// retorna posicoes walkable (sem parede, sem player) para spawn de moedas
 	getWalkablePositions: function(maze, tileSize){
 		var positions = [];
@@ -140,16 +109,13 @@ var stage1State = {
 	// --- UPDATE ---
 
 	update: function(){
-		// atualizar controles touch antes de qualquer leitura de input
 		TouchControls.update();
 
-		// quando pausado, delega input para o PauseUI e retorna
 		if(PauseUI.isPaused){
 			PauseUI.update(PlayerController.controls);
 			return;
 		}
 
-		// timer regressivo
 		this.timeRemaining -= game.time.physicsElapsed;
 		if(this.timeRemaining <= 0){
 			this.timeRemaining = 0;
@@ -158,10 +124,8 @@ var stage1State = {
 		}
 		this.txtTimer.text = 'TEMPO: ' + Utils.formatTime(Math.max(0, this.timeRemaining));
 
-		// barra de estamina
 		this.updateStaminaBar();
 
-		// ESC para pausar
 		if(PlayerController.escKey.isDown && !this.pauseCooldown){
 			PauseUI.pause(PlayerController.sprite, EnemyManager.sprites);
 			this.pauseCooldown = true;
@@ -169,16 +133,15 @@ var stage1State = {
 			return;
 		}
 
-		// fisica e colisoes
 		game.physics.arcade.collide(PlayerController.sprite, this.blocks);
 		this.checkCoinCollisions();
 		this.checkEnemyCollisions();
 
-		// atualizar sistemas
 		PlayerController.update();
 		EnemyManager.update(PlayerController.sprite, this.coinManager);
 	},
 
+	// player coleta moedas
 	// player coleta moedas
 	checkCoinCollisions: function(){
 		var coins = this.coinManager.coins;
@@ -188,6 +151,7 @@ var stage1State = {
 		}
 	},
 
+	// goblins coletam moedas e tocam no player
 	// goblins coletam moedas e tocam no player
 	checkEnemyCollisions: function(){
 		var coins = this.coinManager.coins;
@@ -217,7 +181,6 @@ var stage1State = {
 		this.coins++;
 		this.txtCoins.text = 'MOEDAS: ' + Utils.formatNumber(this.coins, 3);
 
-		// bonus de tempo +2s por moeda coletada
 		this.timeRemaining = Math.min(this.timeRemaining + GameConfig.TIME_BONUS_PER_COIN, GameConfig.TIME_LIMIT);
 		this.showFloatingText(result.x, result.y, '+2s', '#44cc44');
 	},
@@ -227,10 +190,8 @@ var stage1State = {
 	},
 
 	loseCoin: function(){
-		// ignorar se o jogador esta invulneravel apos teleporte
 		if(PlayerController.invulnTimer > 0) return;
 
-		// se tem moedas suficientes, o goblin rouba 5 e teleporta o player
 		if(this.coins >= GameConfig.GOBLIN_STEAL_COINS){
 			AudioManager.playLose();
 			this.coins -= GameConfig.GOBLIN_STEAL_COINS;
@@ -239,7 +200,6 @@ var stage1State = {
 
 			this.showFloatingText(PlayerController.sprite.x, PlayerController.sprite.y, '-' + GameConfig.GOBLIN_STEAL_COINS, '#ff4444');
 
-			// teleporta para posicao inicial com invulnerabilidade temporaria
 			PlayerController.sprite.x = this.startPosition.x;
 			PlayerController.sprite.y = this.startPosition.y;
 			PlayerController.invulnTimer = GameConfig.INVULNERABILITY_AFTER_TELEPORT;
@@ -247,7 +207,6 @@ var stage1State = {
 			return;
 		}
 
-		// sem moedas suficientes = game over
 		AudioManager.playLose();
 		ParticleEffects.burstAt(PlayerController.sprite.x, PlayerController.sprite.y);
 
@@ -276,7 +235,6 @@ var stage1State = {
 		this.txtTimer.anchor.set(1, 0);
 		this.txtTimer.fixedToCamera = true;
 
-		// barra de estamina
 		this.staminaBarBg = game.add.graphics();
 		this.staminaBarBg.fixedToCamera = true;
 		this.staminaBarFill = game.add.graphics();
@@ -292,13 +250,11 @@ var stage1State = {
 		var barH = 12;
 		var ratio = PlayerController.stamina / PlayerController.maxStamina;
 
-		// fundo
 		this.staminaBarBg.clear();
 		this.staminaBarBg.beginFill(0x000000, 0.6);
 		this.staminaBarBg.drawRect(barX - 1, barY - 1, barW + 2, barH + 2);
 		this.staminaBarBg.endFill();
 
-		// preenchimento
 		var fillColor = 0x4488cc;
 		if(ratio < 0.33) fillColor = 0xcc4444;
 		else if(ratio < 0.66) fillColor = 0xcccc44;
@@ -308,7 +264,6 @@ var stage1State = {
 		this.staminaBarFill.drawRect(barX, barY, barW * ratio, barH);
 		this.staminaBarFill.endFill();
 
-		// efeito piscante quando fadiga ativa
 		if(PlayerController.isFatigued){
 			var flashing = Math.floor(game.time.now / 300) % 2 === 0;
 			this.staminaBarFill.clear();
@@ -333,7 +288,6 @@ var stage1State = {
 		game.time.events.add(GameConfig.FLOAT_TEXT_DURATION, function(){ t.destroy(); }, this);
 	},
 
-	// game over por tempo esgotado
 	timeoutGameOver: function(){
 		AudioManager.playLose();
 		ParticleEffects.burstAt(PlayerController.sprite.x, PlayerController.sprite.y);

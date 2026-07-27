@@ -4,7 +4,6 @@
 // Quando GameConfig.isMobile e false, modulo nao faz nada.
 var TouchControls = {
 
-	// --- ESTADO DO INPUT (lido por outros modulos via wrappers) ---
 	_up: false,
 	_down: false,
 	_left: false,
@@ -13,15 +12,12 @@ var TouchControls = {
 	_escape: false,
 	_space: false,
 
-	// --- CONTROLE DE BORDA ---
 	_pauseHeld: false,
 
-	// --- JOYSTICK TRACKING ---
 	// Pointer ID que esta controlando o joystick.
 	// Enquanto este pointer estiver ativo, as direcoes persistem.
 	_joystickPointerId: null,
 
-	// --- ELEMENTOS VISUAIS ---
 	group: null,
 	_joystickPad: null,
 	_joystickNub: null,
@@ -31,24 +27,18 @@ var TouchControls = {
 	buttonB: null,
 	buttonPause: null,
 
-	// --- CONFIGURACAO ---
 	JOYSTICK_TOUCH_RADIUS: 100,
 	JOYSTICK_MAX_DRAG: 55,
 	JOYSTICK_DEADZONE: 8,
 	JOYSTICK_AXIS_MIN: 8,
 	PADDING: 30,
 
-	// escala dos sprites
 	PAD_SCALE: 1.40625,
 	NUB_SCALE: 1.40625,
 	BTN_SCALE: 1.25,
 	PAUSE_SCALE: 1.25,
 
 	active: false,
-
-	// ============================================================
-	// CRIACAO
-	// ============================================================
 
 	create: function(){
 		if(!GameConfig.isMobile) return;
@@ -65,10 +55,6 @@ var TouchControls = {
 		this._createJoystick();
 		this._createButtons();
 	},
-
-	// ============================================================
-	// ATUALIZACAO
-	// ============================================================
 
 	update: function(){
 		if(!this.active) return;
@@ -98,10 +84,6 @@ var TouchControls = {
 		this._updateVisuals();
 	},
 
-	// ============================================================
-	// WRAPPERS DE INPUT
-	// ============================================================
-
 	wrapCursorKeys: function(cursorKeys){
 		var self = this;
 		return {
@@ -119,23 +101,17 @@ var TouchControls = {
 		};
 	},
 
-	// ============================================================
-	// JOYSTICK (sprites + pointer tracking)
-	// ============================================================
-
 	_createJoystick: function(){
 		var x = this.PADDING + 100;
 		var y = game.height - this.PADDING - 100;
 		this._joystickCenter = { x: x, y: y };
 
-		// pad (base) - sprite 128x128
 		this._joystickPad = game.add.sprite(x, y, 'joy_pad', null, this.group);
 		this._joystickPad.anchor.set(0.5);
 		this._joystickPad.scale.set(this.PAD_SCALE);
 		this._joystickPad.smoothed = false;
 		this._joystickPad.alpha = 0.8;
 
-		// nub (thumb que se move) - sprite 64x64
 		this._joystickNub = game.add.sprite(x, y, 'joy_nub', null, this.group);
 		this._joystickNub.anchor.set(0.5);
 		this._joystickNub.scale.set(this.NUB_SCALE);
@@ -158,13 +134,11 @@ var TouchControls = {
 			var p = pointers[i];
 			if(!p || !p.active) continue;
 
-			// pointer controlando joystick e ainda pressionado?
 			if(this._joystickPointerId !== null && p.id === this._joystickPointerId){
 				if(p.isDown){
 					this._processJoystick(p.x, p.y);
 					joystickFound = true;
 				} else {
-					// soltou o dedo - liberar joystick
 					this._joystickPointerId = null;
 					this._up = false;
 					this._down = false;
@@ -176,7 +150,6 @@ var TouchControls = {
 
 			if(!p.isDown) continue;
 
-			// novo toque na area do joystick? Reivindicar
 			if(!joystickFound && this._joystickPointerId === null){
 				if(this._isInJoystickArea(p.x, p.y)){
 					this._joystickPointerId = p.id;
@@ -186,15 +159,12 @@ var TouchControls = {
 				}
 			}
 
-			// botoes de acao
 			if(this._isInButton(p.x, p.y, this.buttonA)){
 				this._space = true;
 				this._enter = true;
 			}
 
-			// botao B: reservado para interacoes futuras
 			if(this._isInButton(p.x, p.y, this.buttonB)){
-				// nenhuma acao no momento
 			}
 
 			if(this._isInButton(p.x, p.y, this.buttonPause)){
@@ -205,7 +175,6 @@ var TouchControls = {
 			}
 		}
 
-		// pointer que controlava joystick nao esta mais na lista
 		if(!joystickFound && this._joystickPointerId !== null){
 			this._joystickPointerId = null;
 			this._up = false;
@@ -228,7 +197,6 @@ var TouchControls = {
 		var dy = py - this._joystickCenter.y;
 		var dist = Math.sqrt(dx * dx + dy * dy);
 
-		// atualizar visual do nub (sempre)
 		var maxDrag = this.JOYSTICK_MAX_DRAG;
 		var thumbDx = dx;
 		var thumbDy = dy;
@@ -238,7 +206,6 @@ var TouchControls = {
 		}
 		this._joystickThumbOffset = { x: thumbDx, y: thumbDy };
 
-		// deadzone global - nao registrar nada se muito perto do centro
 		if(dist < this.JOYSTICK_DEADZONE) return;
 
 		// detectar direcoes usando threshold proporcional ao angulo.
@@ -250,26 +217,19 @@ var TouchControls = {
 		this._left = false;
 		this._right = false;
 
-		// normalizar componentes (0 a 1 em relacao a dist)
 		var nx = dx / dist;
 		var ny = dy / dist;
 
-		// eixo X: registrar se o componente normalizado for significativo
 		if(Math.abs(nx) > 0.3){
 			if(nx > 0) this._right = true;
 			else this._left = true;
 		}
 
-		// eixo Y: registrar se o componente normalizado for significativo
 		if(Math.abs(ny) > 0.3){
 			if(ny > 0) this._down = true;
 			else this._up = true;
 		}
 	},
-
-	// ============================================================
-	// BOTOES (sprites + labels)
-	// ============================================================
 
 	_createButtons: function(){
 		var sw = 64 * this.BTN_SCALE;
@@ -277,21 +237,18 @@ var TouchControls = {
 		var ww = 128 * this.PAUSE_SCALE;
 		var wh = 64 * this.PAUSE_SCALE;
 
-		// botao B (square): canto inferior direito
 		this.buttonB = this._createButton(
 			game.width - this.PADDING - sw / 2,
 			game.height - this.PADDING - sh / 2 - 10,
 			'btn_square', this.BTN_SCALE, 'B'
 		);
 
-		// botao A (circle): a esquerda do B, nivelado
 		this.buttonA = this._createButton(
 			game.width - this.PADDING - sw - sw / 2 - 25,
 			game.height - this.PADDING - sh / 2 + 15,
 			'btn_circle', this.BTN_SCALE, 'A'
 		);
 
-		// botao pause (wide circle): centro inferior
 		this.buttonPause = this._createButton(
 			game.width / 2,
 			game.height - this.PADDING - wh / 2,
@@ -311,7 +268,6 @@ var TouchControls = {
 		var hh = spr.height / 2;
 		var radius = Math.max(hw, hh);
 
-		// label de texto no centro do botao
 		var txt = null;
 		if(label){
 			var fontSize = (key === 'btn_wide') ? '18px' : '24px';
@@ -331,10 +287,6 @@ var TouchControls = {
 		var dy = py - button.y;
 		return Math.sqrt(dx * dx + dy * dy) <= button.radius + 15;
 	},
-
-	// ============================================================
-	// VISUAIS
-	// ============================================================
 
 	_updateVisuals: function(){
 		if(!this._joystickNub) return;

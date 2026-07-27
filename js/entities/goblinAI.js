@@ -19,8 +19,6 @@ GoblinAI.prototype = {
 		this.move();
 	},
 
-	// --- VISAO DO JOGADOR ---
-
 	checkVision: function(){
 		var tileSize = GameConfig.TILE_SIZE;
 		var maxDist = GameConfig.GOBLIN_VISION_DISTANCE;
@@ -57,8 +55,6 @@ GoblinAI.prototype = {
 
 		this.canSeePlayer = true;
 	},
-
-	// --- VISAO DE MOEDAS ---
 
 	checkCoinVision: function(){
 		this.targetCoin = null;
@@ -111,9 +107,6 @@ GoblinAI.prototype = {
 		return true;
 	},
 
-	// --- ESTADOS ---
-
-	// prioridade: CHASE > COLLECT > PATROL
 	updateState: function(){
 		if(this.canSeePlayer){
 			if(this.state !== 'CHASE') this.enterChase();
@@ -157,8 +150,6 @@ GoblinAI.prototype = {
 		this.enemy.processedIntersection = false;
 	},
 
-	// --- DICA A CADA 10s ---
-
 	updateHint: function(){
 		if(this.state !== 'PATROL') return;
 
@@ -169,8 +160,6 @@ GoblinAI.prototype = {
 			this.hintUsed = true;
 		}
 	},
-
-	// --- MOVIMENTACAO ---
 
 	move: function(){
 		var tileSize = GameConfig.TILE_SIZE;
@@ -265,10 +254,12 @@ GoblinAI.prototype = {
 	},
 
 	// CHASE: direcao que mais se aproxima do jogador
+	// CHASE: direcao que mais se aproxima do jogador
 	chooseChaseDirection: function(){
 		this.chooseDirectionToward(this.player.x, this.player.y);
 	},
 
+	// COLLECT: direcao que mais se aproxima da moeda alvo
 	// COLLECT: direcao que mais se aproxima da moeda alvo
 	chooseCollectDirection: function(){
 		if(!this.targetCoin || !this.targetCoin.active){
