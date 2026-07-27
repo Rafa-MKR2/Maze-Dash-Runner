@@ -124,7 +124,6 @@ var stage1State = {
 			this.coins -= GameConfig.GOBLIN_STEAL_COINS;
 			this.score += GameConfig.GOBLIN_STEAL_COINS;
 			this.hud.updateCoins(this.coins);
-
 			this.hud.showFloatingText(PlayerController.sprite.x, PlayerController.sprite.y, '-' + GameConfig.GOBLIN_STEAL_COINS, '#ff4444');
 
 			PlayerController.sprite.x = this.startPosition.x;
@@ -134,23 +133,23 @@ var stage1State = {
 			return;
 		}
 
-		AudioManager.playLose();
-		ParticleEffects.burstAt(PlayerController.sprite.x, PlayerController.sprite.y);
-
-		PlayerData.recordDeath();
-		PlayerData.recordGame(this.coins, GameConfig.TIME_LIMIT - this.timeRemaining);
-
-		game.state.start('end', true, false, { score: this.coins, time: this.timeRemaining, thiefScore: this.score });
+		this.triggerGameOver();
 	},
 
 	timeoutGameOver: function(){
+		this.triggerGameOver('timeout');
+	},
+
+	triggerGameOver: function(reason){
 		AudioManager.playLose();
 		ParticleEffects.burstAt(PlayerController.sprite.x, PlayerController.sprite.y);
 
 		PlayerData.recordDeath();
 		PlayerData.recordGame(this.coins, GameConfig.TIME_LIMIT - this.timeRemaining);
 
-		game.state.start('end', true, false, { score: this.coins, time: this.timeRemaining, thiefScore: this.score, reason: 'timeout' });
+		var data = { score: this.coins, time: this.timeRemaining, thiefScore: this.score };
+		if(reason) data.reason = reason;
+		game.state.start('end', true, false, data);
 	},
 
 	shutdown: function(){
