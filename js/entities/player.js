@@ -67,30 +67,6 @@ var PlayerController = {
 		this.isSprinting = false;
 		if(moving && this.sprintKey.isDown && this.stamina > 0){
 			this.isSprinting = true;
-			this.recoveryTimer = GameConfig.STAMINA_RECOVERY_DELAY;
-			this.stamina -= GameConfig.STAMINA_DRAIN * game.time.physicsElapsed;
-			if(this.stamina <= 0){
-				this.stamina = 0;
-				this.isFatigued = true;
-				this.recoveryTimer = GameConfig.STAMINA_RECOVERY_DELAY + GameConfig.FATIGUE_PENALTY_DELAY;
-				AudioManager.playFatigue();
-			}
-		} else
-		if(this.stamina < this.maxStamina){
-			// aguardar delay antes de comecar a recuperar
-			if(this.recoveryTimer > 0){
-				this.recoveryTimer -= game.time.physicsElapsed;
-			} else {
-				this.stamina += GameConfig.STAMINA_RECOVERY * game.time.physicsElapsed;
-				if(this.stamina > this.maxStamina) this.stamina = this.maxStamina;
-				if(this.isFatigued && this.stamina > 0){
-					this.isFatigued = false;
-				}
-			}
-		}
-
-		if(this.invulnTimer > 0){
-			this.invulnTimer -= game.time.physicsElapsed;
 		}
 
 		var speed = this.isSprinting ? GameConfig.SPRINT_SPEED : GameConfig.PLAYER_SPEED;
@@ -116,7 +92,6 @@ var PlayerController = {
 			movingY = true;
 		}
 
-		// limitar a dois eixos: se ambos pressionados, usa o ultimo registrado
 		if(movingX && movingY){
 			if(s.lastDirection === 'x'){
 				s.body.velocity.y = 0;
@@ -129,6 +104,39 @@ var PlayerController = {
 		} else
 		if(movingY){
 			s.lastDirection = 'y';
+		}
+
+		var touching = s.body.touching;
+		var blocked = false;
+		if(s.body.velocity.x < 0 && touching.left) blocked = true;
+		if(s.body.velocity.x > 0 && touching.right) blocked = true;
+		if(s.body.velocity.y < 0 && touching.up) blocked = true;
+		if(s.body.velocity.y > 0 && touching.down) blocked = true;
+
+		if(this.isSprinting && !blocked){
+			this.recoveryTimer = GameConfig.STAMINA_RECOVERY_DELAY;
+			this.stamina -= GameConfig.STAMINA_DRAIN * game.time.physicsElapsed;
+			if(this.stamina <= 0){
+				this.stamina = 0;
+				this.isFatigued = true;
+				this.recoveryTimer = GameConfig.STAMINA_RECOVERY_DELAY + GameConfig.FATIGUE_PENALTY_DELAY;
+				AudioManager.playFatigue();
+			}
+		} else
+		if(this.stamina < this.maxStamina){
+			if(this.recoveryTimer > 0){
+				this.recoveryTimer -= game.time.physicsElapsed;
+			} else {
+				this.stamina += GameConfig.STAMINA_RECOVERY * game.time.physicsElapsed;
+				if(this.stamina > this.maxStamina) this.stamina = this.maxStamina;
+				if(this.isFatigued && this.stamina > 0){
+					this.isFatigued = false;
+				}
+			}
+		}
+
+		if(this.invulnTimer > 0){
+			this.invulnTimer -= game.time.physicsElapsed;
 		}
 
 		if(s.body.velocity.x < 0){

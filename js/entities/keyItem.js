@@ -74,7 +74,7 @@ KeyItem.prototype = {
 		var targetY = player.y - tileSize * 1.0;
 		game.add.tween(this.playerKeySprite).to({ y: targetY }, 600, Phaser.Easing.Sinusoidal.InOut, true, 0, -1, true);
 
-		this.keyTimer = game.time.events.add(Phaser.Timer.SECOND * 3, function(){
+		this.keyTimer = game.time.events.add(GameConfig.KEY_FLOAT_DURATION, function(){
 			if(this.playerKeySprite){
 				this.playerKeySprite.destroy();
 				this.playerKeySprite = null;

@@ -50,7 +50,7 @@ var GameConfig = {
 	COIN_COUNT: 6,
 
 	// chave: duracao da flutuacao acima do jogador apos coleta (ms)
-	KEY_FLOAT_DURATION: 3000,
+	KEY_FLOAT_DURATION: 2000,
 
 	// animacao de aparencia da porta (ms)
 	DOOR_APPEAR_DURATION: 400,

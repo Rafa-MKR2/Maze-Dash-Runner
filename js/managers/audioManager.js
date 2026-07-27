@@ -18,7 +18,7 @@ var AudioManager = {
 		this.sndFatigue = game.add.audio('fatigue');
 		this.sndFatigue.volume = 0.4;
 		this.sndWin = game.add.audio('win');
-		this.sndWin.volume = 0.6;
+		this.sndWin.volume = SettingsManager.get('volume') / 100 * 0.5;
 
 		if(musicKey && SettingsManager.get('music')){
 			this.music = game.add.audio(musicKey);
