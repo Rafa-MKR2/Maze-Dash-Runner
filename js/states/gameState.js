@@ -26,51 +26,20 @@ var gameState = {
 		this._setupAudio();
 		this._setupUI();
 
-		var self = this;
 		this.collisions = new CollisionManager({
 			player: PlayerController,
 			enemyManager: EnemyManager,
 			coinManager: this.coinManager,
 			blocks: this.blocks,
 			callbacks: {
-				onCoinCollect: function(x, y){
-					ParticleEffects.burstAt(x, y);
-					AudioManager.playCoin();
-					self.coins++;
-					self.timeRemaining = Math.min(self.timeRemaining + GameConfig.TIME_BONUS_PER_COIN, GameConfig.TIME_LIMIT);
-					self.hud.updateCoins(self.coins);
-					self.hud.showFloatingText(x, y, '+2s', '#44cc44');
-				},
-				onPlayerCaught: function(){
-					if(self.coins >= GameConfig.GOBLIN_STEAL_COINS){
-						AudioManager.playLose();
-						self.coins -= GameConfig.GOBLIN_STEAL_COINS;
-						self.score += GameConfig.GOBLIN_STEAL_COINS;
-						self.hud.updateCoins(self.coins);
-						self.hud.showFloatingText(PlayerController.sprite.x, PlayerController.sprite.y, '-' + GameConfig.GOBLIN_STEAL_COINS, '#ff4444');
-						PlayerController.sprite.x = self._startPosition.x;
-						PlayerController.sprite.y = self._startPosition.y;
-						PlayerController.invulnTimer = GameConfig.INVULNERABILITY_AFTER_TELEPORT;
-						game.camera.roundPx = false;
-						return;
-					}
-					self.triggerGameOver();
-				}
+				onCoinCollect: this._onCoinCollect.bind(this),
+				onPlayerCaught: this._onPlayerCaught.bind(this)
 			}
 		});
 
 		this.keyDoor = new KeyDoorManager({
-			onKeyCollected: function(x, y){
-				ParticleEffects.burstAt(x, y);
-				AudioManager.playCoin();
-				self.coins++;
-				self.hud.updateCoins(self.coins);
-				self.hud.showKeyIcon();
-				self.hud.showMessage('Uma porta foi destrancada!');
-			},
-			onStageComplete: function(){
-				self._transitionNextStage();
-			}
+			onKeyCollected: this._onKeyCollected.bind(this),
+			onStageComplete: this._onStageComplete.bind(this)
 		});
 		this.keyDoor.spawn(this._map.keyPosition, this._map.doorPosition, GameConfig.TILE_SIZE);
 
@@ -210,6 +179,44 @@ var gameState = {
 			stamina: PlayerController.maxStamina,
 			maxStamina: PlayerController.maxStamina
 		});
+	},
+
+	_onCoinCollect: function(x, y){
+		ParticleEffects.burstAt(x, y);
+		AudioManager.playCoin();
+		this.coins++;
+		this.timeRemaining = Math.min(this.timeRemaining + GameConfig.TIME_BONUS_PER_COIN, GameConfig.TIME_LIMIT);
+		this.hud.updateCoins(this.coins);
+		this.hud.showFloatingText(x, y, '+2s', '#44cc44');
+	},
+
+	_onPlayerCaught: function(){
+		if(this.coins >= GameConfig.GOBLIN_STEAL_COINS){
+			AudioManager.playLose();
+			this.coins -= GameConfig.GOBLIN_STEAL_COINS;
+			this.score += GameConfig.GOBLIN_STEAL_COINS;
+			this.hud.updateCoins(this.coins);
+			this.hud.showFloatingText(PlayerController.sprite.x, PlayerController.sprite.y, '-' + GameConfig.GOBLIN_STEAL_COINS, '#ff4444');
+			PlayerController.sprite.x = this._startPosition.x;
+			PlayerController.sprite.y = this._startPosition.y;
+			PlayerController.invulnTimer = GameConfig.INVULNERABILITY_AFTER_TELEPORT;
+			game.camera.roundPx = false;
+			return;
+		}
+		this.triggerGameOver();
+	},
+
+	_onKeyCollected: function(x, y){
+		ParticleEffects.burstAt(x, y);
+		AudioManager.playCoin();
+		this.coins++;
+		this.hud.updateCoins(this.coins);
+		this.hud.showKeyIcon();
+		this.hud.showMessage('Uma porta foi destrancada!');
+	},
+
+	_onStageComplete: function(){
+		this._transitionNextStage();
 	},
 
 	_transitionNextStage: function(){
