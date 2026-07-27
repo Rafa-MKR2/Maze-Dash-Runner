@@ -2,7 +2,7 @@ var loadState = {
 
 	preload: function(){
 		var txtloading = game.add.text(game.world.centerX, 150, 'LOADING...', {
-			font: '40px emulogic', fill: '#fff'
+			font: '40px ' + GameConfig.UI_FONT, fill: '#fff'
 		});
 		txtloading.anchor.set(.5);
 
@@ -35,7 +35,7 @@ var loadState = {
 
 		game.load.spritesheet('key', 'img/keyIcons.png', 32, 32);
 		game.load.spritesheet('door', 'img/door.png', 50, 50);
-		game.load.audio('win', 'sfx/ win-level.ogg');
+		game.load.audio('win', 'sfx/win-level.ogg');
 
 		// ground tiles - chão do labirinto preenchido dinamicamente
 		game.load.image('ground_grass00', 'img/grounds_tilesets/ground_grass/ground_grass00.png');

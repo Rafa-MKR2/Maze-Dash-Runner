@@ -4,23 +4,27 @@ var StageHUD = function() {
 	this.txtTimer = null;
 	this.staminaBarBg = null;
 	this.staminaBarFill = null;
+	this.sprKeyHUD = null;
+	this.txtKeyHUD = null;
+	this.winMessage = null;
+	this.winMessageTimer = null;
 };
 
 StageHUD.prototype = {
 
-	create: function(coins, score, timeLimit){
-		this.txtCoins = game.add.text(15, 15, 'MOEDAS: ' + Utils.formatNumber(coins, 3), {
-			font: '15px emulogic', fill: '#fff'
+	create: function(config){
+		this.txtCoins = game.add.text(15, 15, 'MOEDAS: ' + Utils.formatNumber(config.coins, 3), {
+			font: '15px ' + GameConfig.UI_FONT, fill: '#fff'
 		});
 		this.txtCoins.fixedToCamera = true;
 
-		this.txtScore = game.add.text(15, 32, 'PONTUACAO: ' + Utils.formatNumber(score, 3), {
-			font: '15px emulogic', fill: '#fff'
+		this.txtScore = game.add.text(15, 32, 'PONTUACAO: ' + Utils.formatNumber(config.score, 3), {
+			font: '15px ' + GameConfig.UI_FONT, fill: '#fff'
 		});
 		this.txtScore.fixedToCamera = true;
 
-		this.txtTimer = game.add.text(game.camera.width - 15, 15, 'TEMPO: ' + Utils.formatTime(timeLimit), {
-			font: '15px emulogic', fill: '#fff'
+		this.txtTimer = game.add.text(game.camera.width - 15, 15, 'TEMPO: ' + Utils.formatTime(config.time), {
+			font: '15px ' + GameConfig.UI_FONT, fill: '#fff'
 		});
 		this.txtTimer.anchor.set(1, 0);
 		this.txtTimer.fixedToCamera = true;
@@ -29,7 +33,7 @@ StageHUD.prototype = {
 		this.staminaBarBg.fixedToCamera = true;
 		this.staminaBarFill = game.add.graphics();
 		this.staminaBarFill.fixedToCamera = true;
-		this.updateStamina();
+		this.updateStamina(config.stamina, config.maxStamina, false);
 	},
 
 	updateCoins: function(value){
@@ -44,12 +48,12 @@ StageHUD.prototype = {
 		this.txtTimer.text = 'TEMPO: ' + Utils.formatTime(Math.max(0, seconds));
 	},
 
-	updateStamina: function(){
+	updateStamina: function(stamina, maxStamina, isFatigued){
 		var barX = 15;
 		var barY = 65;
 		var barW = 120;
 		var barH = 12;
-		var ratio = PlayerController.stamina / PlayerController.maxStamina;
+		var ratio = stamina / maxStamina;
 
 		this.staminaBarBg.clear();
 		this.staminaBarBg.beginFill(0x000000, 0.6);
@@ -60,12 +64,7 @@ StageHUD.prototype = {
 		if(ratio < 0.33) fillColor = 0xcc4444;
 		else if(ratio < 0.66) fillColor = 0xcccc44;
 
-		this.staminaBarFill.clear();
-		this.staminaBarFill.beginFill(fillColor);
-		this.staminaBarFill.drawRect(barX, barY, barW * ratio, barH);
-		this.staminaBarFill.endFill();
-
-		if(PlayerController.isFatigued){
+		if(isFatigued){
 			var flashing = Math.floor(game.time.now / 300) % 2 === 0;
 			this.staminaBarFill.clear();
 			this.staminaBarFill.beginFill(flashing ? 0xff0000 : 0x330000);
@@ -79,9 +78,55 @@ StageHUD.prototype = {
 		}
 	},
 
+	showKeyIcon: function(){
+		if(this.sprKeyHUD) return;
+
+		this.sprKeyHUD = game.add.sprite(140, 16, 'key', 0);
+		this.sprKeyHUD.anchor.set(.5);
+		this.sprKeyHUD.scale.set(.75);
+		this.sprKeyHUD.fixedToCamera = true;
+
+		this.txtKeyHUD = game.add.text(162, 24, 'CHAVE', {
+			font: '11px ' + GameConfig.UI_FONT, fill: '#ffcc00'
+		});
+		this.txtKeyHUD.fixedToCamera = true;
+	},
+
+	hideKeyIcon: function(){
+		if(this.sprKeyHUD){
+			this.sprKeyHUD.destroy();
+			this.sprKeyHUD = null;
+		}
+		if(this.txtKeyHUD){
+			this.txtKeyHUD.destroy();
+			this.txtKeyHUD = null;
+		}
+	},
+
+	showMessage: function(text){
+		if(this.winMessage) this.winMessage.destroy();
+		if(this.winMessageTimer) game.time.events.remove(this.winMessageTimer);
+
+		this.winMessage = game.add.text(
+			game.camera.view.centerX,
+			game.camera.view.centerY - 60,
+			text,
+			{ font: '20px ' + GameConfig.UI_FONT, fill: '#00ff88' }
+		);
+		this.winMessage.anchor.set(.5);
+
+		var self = this;
+		this.winMessageTimer = game.time.events.add(Phaser.Timer.SECOND * 2, function(){
+			if(self.winMessage){
+				self.winMessage.destroy();
+				self.winMessage = null;
+			}
+		});
+	},
+
 	showFloatingText: function(x, y, text, color){
 		var t = game.add.text(x, y, text, {
-			font: '13px emulogic', fill: color
+			font: '13px ' + GameConfig.UI_FONT, fill: color
 		});
 		t.anchor.set(0.5);
 		game.add.tween(t).to({ y: y - 30, alpha: 0 }, GameConfig.FLOAT_TEXT_DURATION, Phaser.Easing.Linear.None, true);
@@ -89,10 +134,14 @@ StageHUD.prototype = {
 	},
 
 	destroy: function(){
+		if(this.winMessageTimer) game.time.events.remove(this.winMessageTimer);
+		if(this.winMessage) this.winMessage.destroy();
+		this.hideKeyIcon();
 		if(this.staminaBarFill) this.staminaBarFill.destroy();
 		if(this.staminaBarBg) this.staminaBarBg.destroy();
 		if(this.txtTimer) this.txtTimer.destroy();
 		if(this.txtScore) this.txtScore.destroy();
 		if(this.txtCoins) this.txtCoins.destroy();
 	}
+
 };

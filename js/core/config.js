@@ -50,6 +50,8 @@ var GameConfig = {
 	KEY_FLOAT_DURATION: 3000,
 
 	// animacao de aparencia da porta (ms)
-	DOOR_APPEAR_DURATION: 400
+	DOOR_APPEAR_DURATION: 400,
+
+	UI_FONT: 'emulogic'
 
 };

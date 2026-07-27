@@ -21,15 +21,19 @@ var Director = {
 		switch(stageNumber) {
 			case 1:
 				variations = [
-					Stage01Variation01,
-					Stage01Variation02,
-					Stage01Variation03
+					Variation01,
+					Variation02,
+					Variation03
 				];
 				break;
 			default:
-				variations = [Stage01Variation01];
+				variations = [Variation01];
 		}
 
+		// Diretor do caos.
+		// Hoje resolveu pegar leve.
+		// Talvez.
+		// Variações com maze vazio são ignoradas automaticamente.
 		var validVariations = [];
 		for(var i = 0; i < variations.length; i++){
 			if(variations[i].maze.length > 0){
@@ -91,8 +95,7 @@ var Director = {
 
 	// posiciona a chave e a porta em tiles walkable validos.
 	// a chave usa um tile livre.
-	// a porta precisa de 2 tiles horizontais livres (a porta tem 100px de largura
-	// = 2 tiles de 50px), por isso verifica que ambos estao desocupados.
+	// a porta ocupa 1 tile (50x50), marcado com 4 no maze.
 	// evita sobrepor com posicao do jogador, spawns de inimigos
 	// e quaisquer outras restricoes do Director.
 	placeItems: function(walkable, variation, enemyCount) {
@@ -133,13 +136,12 @@ var Director = {
 
 		var keyPosition = freeTiles[0] || { row: 1, col: 1 };
 
-		// seleciona posicao da porta: prefere extremidades de corredor
-		// e becos sem saida (menos vizinhos walkable).
-		// A porta precisa de 2 tiles horizontais livres consecutivos.
-		// Ela representa a saida da fase, entao deve parecer
-		// uma saida — nao bloquear circulacao principal nem aparecer
-		// no meio de cruzamentos.
-		var doorPosition = this.findBestDoorPosition(maze, occupied, walkable, maze.length, maze[0].length);
+		// bloqueia o tile da chave pra porta nunca sobrepor
+		occupied[keyPosition.row + ',' + keyPosition.col] = true;
+
+		// seleciona posicao da porta: usa marcadores 4 do maze.
+		// a porta ocupa 1 tile (50x50). sem marcadores, fallback simples.
+		var doorPosition = this.pickDoorPosition(maze, occupied, freeTiles, maze.length, maze[0].length);
 
 		return {
 			keyPosition: keyPosition,
@@ -147,67 +149,35 @@ var Director = {
 		};
 	},
 
-	// encontra a melhor posicao para a porta dentre os tiles walkable livres.
-	// A porta precisa de 2 tiles horizontais consecutivos livres.
-	// Prefere posicoes com poucos vizinhos walkable livres —
-	// ou seja, extremidades de corredor e becos sem saida —
-	// onde a porta parece uma saída natural e nao bloqueia circulacao.
-	findBestDoorPosition: function(maze, occupied, freeTiles, rows, cols) {
-		var isFree = {};
-		for(var i = 0; i < freeTiles.length; i++){
-			isFree[freeTiles[i].row + ',' + freeTiles[i].col] = true;
-		}
-
-		var bestDoor = null;
-		var bestScore = Infinity;
-
-		for(var i = 0; i < freeTiles.length; i++){
-			var r = freeTiles[i].row;
-			var c = freeTiles[i].col;
-			var cKey = r + ',' + c;
-
-			if(occupied[cKey]) continue;
-
-			// proximo tile a direita
-			var nc = c + 1;
-			if(nc >= cols) continue;
-			var nKey = r + ',' + nc;
-			if(occupied[nKey]) continue;
-			if(maze[r][nc] === 1) continue;
-
-		// ambos os tiles sao validos — calcula score
-		// soma dos vizinhos walkable livres dos dois tiles
-		// quanto menor o score, mais isolado o par = melhor candidato
-		// bonus para tiles na borda do labirinto: a porta deve parecer
-		// uma saida — aparece na extremidade do mapa, nao no meio do corredor
-		var score = 0;
-		var neighbors = [
-			[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1],
-			[r - 1, nc], [r + 1, nc], [r, nc - 1], [r, nc + 1]
-		];
-		for(var n = 0; n < neighbors.length; n++){
-			var nr = neighbors[n][0];
-			var nc2 = neighbors[n][1];
-			if(nr < 0 || nr >= rows || nc2 < 0 || nc2 >= cols) continue;
-			if(maze[nr][nc2] === 1) continue;
-			var nk = nr + ',' + nc2;
-			if(isFree[nk] || nk === cKey || nk === nKey) score++;
-		}
-		// bonus de borda: tiles proximos da parede externa recebem reducao no score
-		if(r === 1 || r === rows - 2) score -= 2;
-		if(c === 1 || c === cols - 2 || nc === cols - 2) score -= 2;
-
-		if(score < bestScore){
-				bestScore = score;
-				bestDoor = { row: r, col: c };
+	// escolhe a posicao da porta usando marcadores 4 do mapa.
+	// cada 4 precisa ter parede ACIMA (r-1 = 1) e piso ABAIXO
+	// walkavel (r+1 != 1) — acesso exclusivo por baixo.
+	// sem marcadores, faz fallback com as mesmas exigencias.
+	pickDoorPosition: function(maze, occupied, freeTiles, rows, cols) {
+		var anchors = [];
+		for(var r = 0; r < maze.length; r++){
+			for(var c = 0; c < maze[r].length; c++){
+				if(maze[r][c] !== 4) continue;
+				if(occupied[r + ',' + c]) continue;
+				if(r === 0 || maze[r - 1][c] !== 1) continue;
+				if(r === rows - 1 || maze[r + 1][c] === 1) continue;
+				anchors.push({ row: r, col: c });
 			}
 		}
 
-		if(!bestDoor){
-			bestDoor = { row: rows - 2, col: Math.max(0, cols - 3) };
+		if(anchors.length > 0){
+			return anchors[Math.floor(Math.random() * anchors.length)];
 		}
 
-		return bestDoor;
+		// fallback: primeiro tile com parede acima e piso abaixo
+		for(var i = 0; i < freeTiles.length; i++){
+			var r = freeTiles[i].row;
+			var c = freeTiles[i].col;
+			if(occupied[r + ',' + c]) continue;
+			if(r > 0 && maze[r - 1][c] === 1 && r < rows - 1 && maze[r + 1][c] !== 1) return { row: r, col: c };
+		}
+
+		return { row: 1, col: 1 };
 	},
 
 	// valida o mapa de uma variação e retorna um resultado estruturado.
@@ -222,6 +192,7 @@ var Director = {
 		var errors = [];
 		var warnings = [];
 
+		// verifica se todas as linhas têm o mesmo tamanho
 		var expectedLen = maze[0] ? maze[0].length : 0;
 		for(var i = 1; i < maze.length; i++){
 			if(maze[i].length !== expectedLen){
@@ -229,6 +200,7 @@ var Director = {
 			}
 		}
 
+		// encontra a posição do jogador (tile 2) e verifica se existe
 		var playerRow = -1, playerCol = -1;
 		var playerFound = false;
 		for(var r = 0; r < maze.length; r++){
@@ -244,6 +216,8 @@ var Director = {
 			errors.push('Mapa não possui posição inicial do jogador (tile 2 não encontrado)');
 		}
 
+		// verifica se algum spawn de inimigo está em uma parede (tile 1)
+		// ou ocupa o mesmo tile do jogador
 		var spawns = variation.enemySpawns || [];
 		for(var s = 0; s < spawns.length; s++){
 			var spawn = spawns[s];
@@ -264,6 +238,7 @@ var Director = {
 			}
 		}
 
+		// reporta no console diferenciando erro de aviso
 		for(var e = 0; e < errors.length; e++){
 			console.error('[Director] Erro em "' + name + '": ' + errors[e]);
 		}

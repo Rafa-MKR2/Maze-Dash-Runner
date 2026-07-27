@@ -1,44 +1,81 @@
 var stage1State = {
 
+	hud: null,
+	collisions: null,
+	coinManager: null,
+	keyDoor: null,
+
+	init: function(data){
+		if(data){
+			this.persistedScore = data.score || 0;
+			this.persistedTime = data.timeRemaining || GameConfig.TIME_LIMIT;
+		} else {
+			this.persistedScore = null;
+			this.persistedTime = null;
+		}
+	},
+
 	create: function(){
 		SettingsManager.load();
 		PlayerData.load();
 
-		var map = Director.getStage(1);
-		var tileSize = GameConfig.TILE_SIZE;
+		this._restoreScore();
+		this._setupStage();
+		this._setupCamera();
+		this._setupEntities();
+		this._setupAudio();
+		this._setupUI();
 
-		var result = MapBuilder.build(map.data, tileSize);
-		this.blocks = result.blocks;
-		this.startPosition = result.startPosition;
-
-		PlayerController.create(this.startPosition.x, this.startPosition.y);
-
-		var mapWidth = map.data.maze[0].length * tileSize;
-		var mapHeight = map.data.maze.length * tileSize;
-		game.world.setBounds(0, 0, mapWidth, mapHeight);
-		game.camera.follow(PlayerController.sprite, Phaser.Camera.FOLLOW_LOCKON);
-		game.camera.setBoundsToWorld();
-
-		EnemyManager.create(map.enemySpawns, map.enemyType, map.data.maze);
-
-		var tilePositions = MapBuilder.getWalkablePositions(map.data.maze, tileSize);
-		this.coinManager = new CoinManager(map.data.maze, tilePositions);
-		this.coinManager.spawn(map.coinCount);
-
-		AudioManager.init(map.musicKey);
-		ParticleEffects.init();
-
-		PauseUI.create({
-			onResume: function(){ AudioManager.resume(); },
-			onRestart: function(){ AudioManager.stop(); game.state.start('stage1'); },
-			onQuit: function(){ AudioManager.stop(); game.state.start('menu'); }
+		var self = this;
+		this.collisions = new CollisionManager({
+			player: PlayerController,
+			enemyManager: EnemyManager,
+			coinManager: this.coinManager,
+			blocks: this.blocks,
+			callbacks: {
+				onCoinCollect: function(x, y){
+					ParticleEffects.burstAt(x, y);
+					AudioManager.playCoin();
+					self.coins++;
+					self.timeRemaining = Math.min(self.timeRemaining + GameConfig.TIME_BONUS_PER_COIN, GameConfig.TIME_LIMIT);
+					self.hud.updateCoins(self.coins);
+					self.hud.showFloatingText(x, y, '+2s', '#44cc44');
+				},
+				onPlayerCaught: function(){
+					if(self.coins >= GameConfig.GOBLIN_STEAL_COINS){
+						AudioManager.playLose();
+						self.coins -= GameConfig.GOBLIN_STEAL_COINS;
+						self.score += GameConfig.GOBLIN_STEAL_COINS;
+						self.hud.updateCoins(self.coins);
+						self.hud.showFloatingText(PlayerController.sprite.x, PlayerController.sprite.y, '-' + GameConfig.GOBLIN_STEAL_COINS, '#ff4444');
+						PlayerController.sprite.x = self._startPosition.x;
+						PlayerController.sprite.y = self._startPosition.y;
+						PlayerController.invulnTimer = GameConfig.INVULNERABILITY_AFTER_TELEPORT;
+						game.camera.roundPx = false;
+						return;
+					}
+					self.triggerGameOver();
+				}
+			}
 		});
 
-		this.coins = 0;
-		this.score = 0;
-		this.timeRemaining = GameConfig.TIME_LIMIT;
-		this.hud = new StageHUD();
-		this.hud.create(this.coins, this.score, this.timeRemaining);
+		this.keyDoor = new KeyDoorManager({
+			onKeyCollected: function(x, y){
+				ParticleEffects.burstAt(x, y);
+				AudioManager.playCoin();
+				self.coins++;
+				self.hud.updateCoins(self.coins);
+				self.hud.showKeyIcon();
+				self.hud.showMessage('Uma porta foi destrancada!');
+			},
+			onStageComplete: function(){
+				self._transitionNextStage();
+			}
+		});
+		this.keyDoor.spawn(this._map.keyPosition, this._map.doorPosition, GameConfig.TILE_SIZE);
+
+		this._map.data.maze[this._map.doorPosition.row][this._map.doorPosition.col] = 1;
+
 		this.pauseCooldown = false;
 	},
 
@@ -50,6 +87,8 @@ var stage1State = {
 			return;
 		}
 
+		if(this.keyDoor.isComplete()) return;
+
 		this.timeRemaining -= game.time.physicsElapsed;
 		if(this.timeRemaining <= 0){
 			this.timeRemaining = 0;
@@ -57,7 +96,7 @@ var stage1State = {
 			return;
 		}
 		this.hud.updateTimer(this.timeRemaining);
-		this.hud.updateStamina();
+		this.hud.updateStamina(PlayerController.stamina, PlayerController.maxStamina, PlayerController.isFatigued);
 
 		if(PlayerController.escKey.isDown && !this.pauseCooldown){
 			PauseUI.pause(PlayerController.sprite, EnemyManager.sprites);
@@ -66,74 +105,16 @@ var stage1State = {
 			return;
 		}
 
-		game.physics.arcade.collide(PlayerController.sprite, this.blocks);
-		this.checkCoinCollisions();
-		this.checkEnemyCollisions();
+		this.collisions.update();
+		this.keyDoor.update(PlayerController.sprite);
 
-		PlayerController.update();
-		EnemyManager.update(PlayerController.sprite, this.coinManager);
-	},
-
-	checkCoinCollisions: function(){
-		var coins = this.coinManager.coins;
-		for(var i = 0; i < coins.length; i++){
-			if(!coins[i].active) continue;
-			game.physics.arcade.overlap(PlayerController.sprite, coins[i], this.playerCollectCoin, null, this);
-		}
-	},
-
-	checkEnemyCollisions: function(){
-		var coins = this.coinManager.coins;
-		var enemies = EnemyManager.sprites;
-
-		for(var i = 0; i < enemies.length; i++){
-			var enemy = enemies[i];
-
-			for(var j = 0; j < coins.length; j++){
-				if(!coins[j].active) continue;
-				game.physics.arcade.overlap(enemy, coins[j], this.goblinCollectCoin, null, this);
-			}
-
-			game.physics.arcade.overlap(PlayerController.sprite, enemy, this.loseCoin, null, this);
-		}
-	},
-
-	playerCollectCoin: function(player, coin){
-		var result = this.coinManager.collect(coin);
-		if(!result.collected) return;
-
-		ParticleEffects.burstAt(result.x, result.y);
-		AudioManager.playCoin();
-
-		this.coins++;
-		this.hud.updateCoins(this.coins);
-
-		this.timeRemaining = Math.min(this.timeRemaining + GameConfig.TIME_BONUS_PER_COIN, GameConfig.TIME_LIMIT);
-		this.hud.showFloatingText(result.x, result.y, '+2s', '#44cc44');
-	},
-
-	goblinCollectCoin: function(enemy, coin){
-		this.coinManager.collect(coin);
-	},
-
-	loseCoin: function(){
-		if(PlayerController.invulnTimer > 0) return;
-
-		if(this.coins >= GameConfig.GOBLIN_STEAL_COINS){
-			AudioManager.playLose();
-			this.coins -= GameConfig.GOBLIN_STEAL_COINS;
-			this.score += GameConfig.GOBLIN_STEAL_COINS;
-			this.hud.updateCoins(this.coins);
-			this.hud.showFloatingText(PlayerController.sprite.x, PlayerController.sprite.y, '-' + GameConfig.GOBLIN_STEAL_COINS, '#ff4444');
-
-			PlayerController.sprite.x = this.startPosition.x;
-			PlayerController.sprite.y = this.startPosition.y;
-			PlayerController.invulnTimer = GameConfig.INVULNERABILITY_AFTER_TELEPORT;
-			game.camera.roundPx = false;
+		if(this.keyDoor.isComplete()){
+			PlayerController.stop();
 			return;
 		}
 
-		this.triggerGameOver();
+		PlayerController.update();
+		EnemyManager.update(PlayerController.sprite, this.coinManager);
 	},
 
 	timeoutGameOver: function(){
@@ -154,6 +135,89 @@ var stage1State = {
 
 	shutdown: function(){
 		AudioManager.stop();
+	},
+
+	_restoreScore: function(){
+		if(this.persistedScore !== null){
+			this.score = this.persistedScore;
+			this.timeRemaining = this.persistedTime;
+		} else {
+			this.score = 0;
+			this.timeRemaining = GameConfig.TIME_LIMIT;
+		}
+	},
+
+	_setupStage: function(){
+		this._map = Director.getStage(1);
+		var tileSize = GameConfig.TILE_SIZE;
+
+		this._built = MapBuilder.build(this._map.data, tileSize);
+		this.blocks = this._built.blocks;
+		this._startPosition = this._built.startPosition;
+
+		PlayerController.create(this._built.startPosition.x, this._built.startPosition.y);
+	},
+
+	_setupCamera: function(){
+		var tileSize = GameConfig.TILE_SIZE;
+		var mapWidth = this._map.data.maze[0].length * tileSize;
+		var mapHeight = this._map.data.maze.length * tileSize;
+		game.world.setBounds(0, 0, mapWidth, mapHeight);
+		game.camera.follow(PlayerController.sprite, Phaser.Camera.FOLLOW_LOCKON);
+		game.camera.setBoundsToWorld();
+	},
+
+	_setupEntities: function(){
+		EnemyManager.create(this._map.enemySpawns, this._map.enemyType, this._map.data.maze);
+
+		var keyR = this._map.keyPosition.row;
+		var keyC = this._map.keyPosition.col;
+		var doorR = this._map.doorPosition.row;
+		var doorC = this._map.doorPosition.col;
+
+		var cleanPositions = [];
+		for(var i = 0; i < this._built.walkablePositions.length; i++){
+			var pos = this._built.walkablePositions[i];
+			var row = Math.floor(pos.y / GameConfig.TILE_SIZE);
+			var col = Math.floor(pos.x / GameConfig.TILE_SIZE);
+			if(row === keyR && col === keyC) continue;
+			if(row === doorR && col === doorC) continue;
+			cleanPositions.push(pos);
+		}
+
+		this.coinManager = new CoinManager(this._map.data.maze, cleanPositions);
+		this.coinManager.spawn(this._map.coinCount);
+	},
+
+	_setupAudio: function(){
+		AudioManager.init(this._map.musicKey);
+		ParticleEffects.init();
+	},
+
+	_setupUI: function(){
+		PauseUI.create({
+			onResume: function(){ AudioManager.resume(); },
+			onRestart: function(){ AudioManager.stop(); game.state.start('stage1'); },
+			onQuit: function(){ AudioManager.stop(); game.state.start('menu'); }
+		});
+
+		this.hud = new StageHUD();
+		this.hud.create({
+			coins: 0,
+			score: this.score,
+			time: this.timeRemaining,
+			stamina: PlayerController.maxStamina,
+			maxStamina: PlayerController.maxStamina
+		});
+	},
+
+	_transitionNextStage: function(){
+		this.hud.hideKeyIcon();
+
+		game.state.start('stage1', true, false, {
+			score: this.score,
+			timeRemaining: this.timeRemaining
+		});
 	}
 
 };
