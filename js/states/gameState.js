@@ -8,10 +8,12 @@ var gameState = {
 	init: function(data){
 		if(data){
 			this.persistedScore = data.score || 0;
-			this.persistedTime = data.timeRemaining || GameConfig.TIME_LIMIT;
+			this.persistedPoints = data.points || 0;
+			this.persistedCoins = data.coins || 0;
 		} else {
 			this.persistedScore = null;
-			this.persistedTime = null;
+			this.persistedPoints = null;
+			this.persistedCoins = null;
 		}
 	},
 
@@ -54,7 +56,6 @@ var gameState = {
 			}
 		});
 
-		this.coins = 0;
 		this.pauseCooldown = false;
 	},
 
@@ -119,12 +120,14 @@ var gameState = {
 	_restoreScore: function(){
 		if(this.persistedScore !== null){
 			this.score = this.persistedScore;
-			this.timeRemaining = this.persistedTime;
+			this.points = this.persistedPoints;
+			this.coins = this.persistedCoins;
 		} else {
 			this.score = 0;
-			this.timeRemaining = GameConfig.TIME_LIMIT;
+			this.points = 0;
+			this.coins = 0;
 		}
-		this.points = 0;
+		this.timeRemaining = GameConfig.TIME_LIMIT;
 	},
 
 	_setupStage: function(){
@@ -192,7 +195,7 @@ var gameState = {
 
 		this.hud = new StageHUD();
 		this.hud.create({
-			coins: 0,
+			coins: this.coins,
 			score: this.points,
 			time: this.timeRemaining,
 			stamina: PlayerController.maxStamina,
@@ -248,7 +251,8 @@ var gameState = {
 
 		game.state.start('game', true, false, {
 			score: this.score,
-			timeRemaining: this.timeRemaining
+			points: this.points,
+			coins: this.coins
 		});
 	}
 
