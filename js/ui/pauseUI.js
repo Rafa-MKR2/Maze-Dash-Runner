@@ -42,6 +42,7 @@ var PauseUI = {
 		this.pauseGroup = game.add.group();
 		this.pauseGroup.visible = false;
 		this.pauseGroup.fixedToCamera = true;
+		game.world.bringToTop(this.pauseGroup);
 
 		var bg = game.add.graphics(0, 0, this.pauseGroup);
 		bg.beginFill(0x000000, 0.6);
@@ -82,6 +83,7 @@ var PauseUI = {
 		this.confirmGroup = game.add.group();
 		this.confirmGroup.visible = false;
 		this.confirmGroup.fixedToCamera = true;
+		game.world.bringToTop(this.confirmGroup);
 
 		var bg = game.add.graphics(0, 0, this.confirmGroup);
 		bg.beginFill(0x000000, 0.75);

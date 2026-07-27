@@ -24,6 +24,19 @@ var gameState = {
 		this._setupCamera();
 		this._setupEntities();
 		this._setupAudio();
+
+		this.keyDoor = new KeyDoorManager({
+			onKeyCollected: this._onKeyCollected.bind(this),
+			onStageComplete: this._onStageComplete.bind(this)
+		});
+		this.keyDoor.spawn(this._map.keyPosition, this._map.doorPosition, GameConfig.TILE_SIZE);
+
+		var dr = this._map.doorPosition.row;
+		var dc = this._map.doorPosition.col;
+		this._map.data.maze[dr][dc] = 1;
+		window._doorRow = dr;
+		window._doorCol = dc;
+
 		this._setupUI();
 
 		this.collisions = new CollisionManager({
@@ -36,12 +49,6 @@ var gameState = {
 				onPlayerCaught: this._onPlayerCaught.bind(this)
 			}
 		});
-
-		this.keyDoor = new KeyDoorManager({
-			onKeyCollected: this._onKeyCollected.bind(this),
-			onStageComplete: this._onStageComplete.bind(this)
-		});
-		this.keyDoor.spawn(this._map.keyPosition, this._map.doorPosition, GameConfig.TILE_SIZE);
 
 		this.coins = 0;
 		this.pauseCooldown = false;
@@ -182,6 +189,7 @@ var gameState = {
 			stamina: PlayerController.maxStamina,
 			maxStamina: PlayerController.maxStamina
 		});
+		game.world.bringToTop(this.hud.group);
 	},
 
 	_onCoinCollect: function(x, y){

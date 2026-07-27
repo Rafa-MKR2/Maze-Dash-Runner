@@ -1,4 +1,5 @@
 var StageHUD = function() {
+	this.group = null;
 	this.txtCoins = null;
 	this.txtScore = null;
 	this.txtTimer = null;
@@ -13,31 +14,25 @@ var StageHUD = function() {
 StageHUD.prototype = {
 
 	create: function(config){
+		this.group = game.add.group();
+		this.group.fixedToCamera = true;
+
 		this.txtCoins = game.add.text(15, 15, 'MOEDAS: ' + Utils.formatNumber(config.coins, 3), {
 			font: '15px ' + GameConfig.UI_FONT, fill: '#fff'
-		});
-		this.txtCoins.fixedToCamera = true;
+		}, this.group);
 
 		this.txtScore = game.add.text(15, 32, 'PONTUACAO: ' + Utils.formatNumber(config.score, 3), {
 			font: '15px ' + GameConfig.UI_FONT, fill: '#fff'
-		});
-		this.txtScore.fixedToCamera = true;
+		}, this.group);
 
-		this.txtTimer = game.add.text(game.camera.width - 15, 15, 'TEMPO: ' + Utils.formatTime(config.time), {
+		this.txtTimer = game.add.text(game.width - 15, 15, 'TEMPO: ' + Utils.formatTime(config.time), {
 			font: '15px ' + GameConfig.UI_FONT, fill: '#fff'
-		});
+		}, this.group);
 		this.txtTimer.anchor.set(1, 0);
-		this.txtTimer.fixedToCamera = true;
 
-		this.staminaBarBg = game.add.graphics();
-		this.staminaBarBg.fixedToCamera = true;
-		this.staminaBarFill = game.add.graphics();
-		this.staminaBarFill.fixedToCamera = true;
+		this.staminaBarBg = game.add.graphics(0, 0, this.group);
+		this.staminaBarFill = game.add.graphics(0, 0, this.group);
 		this.updateStamina(config.stamina, config.maxStamina, false);
-
-		game.world.bringToTop(this.txtCoins);
-		game.world.bringToTop(this.txtScore);
-		game.world.bringToTop(this.txtTimer);
 	},
 
 	updateCoins: function(value){
@@ -85,19 +80,14 @@ StageHUD.prototype = {
 	showKeyIcon: function(){
 		if(this.sprKeyHUD) return;
 
-		this.sprKeyHUD = game.add.sprite(game.width - 15, 32, 'key', 0);
-		this.sprKeyHUD.anchor.set(1, 0.5);
+		this.sprKeyHUD = game.add.sprite(game.width / 2, 24, 'key', 0, this.group);
+		this.sprKeyHUD.anchor.set(0.5, 0.5);
 		this.sprKeyHUD.scale.set(.75);
-		this.sprKeyHUD.fixedToCamera = true;
 
-		this.txtKeyHUD = game.add.text(game.width - 22, 34, 'CHAVE', {
+		this.txtKeyHUD = game.add.text(game.width / 2, 36, 'CHAVE', {
 			font: '11px ' + GameConfig.UI_FONT, fill: '#ffcc00'
-		});
-		this.txtKeyHUD.anchor.set(1, 0);
-		this.txtKeyHUD.fixedToCamera = true;
-
-		game.world.bringToTop(this.sprKeyHUD);
-		game.world.bringToTop(this.txtKeyHUD);
+		}, this.group);
+		this.txtKeyHUD.anchor.set(0.5, 0);
 	},
 
 	hideKeyIcon: function(){

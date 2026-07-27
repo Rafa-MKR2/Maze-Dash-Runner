@@ -88,6 +88,10 @@ GoblinAI.prototype = {
 	},
 
 	// verifica se nao ha paredes entre dois pontos na mesma linha/coluna
+	_isDoorTile: function(row, col){
+		return window._doorRow === row && window._doorCol === col;
+	},
+
 	checkLineOfSight: function(fromRow, fromCol, toRow, toCol){
 		if(fromRow === toRow){
 			var step = fromCol < toCol ? 1 : -1;
@@ -222,20 +226,46 @@ GoblinAI.prototype = {
 		var row = Math.floor(this.enemy.y / tileSize);
 		var paths = [];
 
-		if(this.maze[row][col - 1] !== 1 && this.enemy.direction !== 'RIGHT'){
+		if(this._isWalkable(row, col - 1) && this.enemy.direction !== 'RIGHT'){
 			paths.push('LEFT');
 		}
-		if(this.maze[row][col + 1] !== 1 && this.enemy.direction !== 'LEFT'){
+		if(this._isWalkable(row, col + 1) && this.enemy.direction !== 'LEFT'){
 			paths.push('RIGHT');
 		}
-		if(this.maze[row - 1] !== undefined && this.maze[row - 1][col] !== 1 && this.enemy.direction !== 'DOWN'){
+		if(this.maze[row - 1] !== undefined && this._isWalkable(row - 1, col) && this.enemy.direction !== 'DOWN'){
 			paths.push('UP');
 		}
-		if(this.maze[row + 1] !== undefined && this.maze[row + 1][col] !== 1 && this.enemy.direction !== 'UP'){
+		if(this.maze[row + 1] !== undefined && this._isWalkable(row + 1, col) && this.enemy.direction !== 'UP'){
 			paths.push('DOWN');
 		}
 
-		return paths;
+		return this.filterDoorPaths(row, col, paths);
+	},
+
+	_isWalkable: function(row, col){
+		var tile = this.maze[row][col];
+		if(tile !== 1) return true;
+		return this._isDoorTile(row, col);
+	},
+
+	filterDoorPaths: function(row, col, paths){
+		if(this.canSeePlayer) return paths;
+
+		var filtered = [];
+		for(var i = 0; i < paths.length; i++){
+			var nextRow = row;
+			var nextCol = col;
+			switch(paths[i]){
+				case 'LEFT':  nextCol--; break;
+				case 'RIGHT': nextCol++; break;
+				case 'UP':    nextRow--; break;
+				case 'DOWN':  nextRow++; break;
+			}
+			if(!this._isDoorTile(nextRow, nextCol)){
+				filtered.push(paths[i]);
+			}
+		}
+		return filtered;
 	},
 
 	// PATROL: direcao aleatoria, ou dica do player
