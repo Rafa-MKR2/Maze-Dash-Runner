@@ -1,4 +1,4 @@
-var stage1State = {
+var gameStage = {
 
 	hud: null,
 	collisions: null,
