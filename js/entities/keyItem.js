@@ -9,6 +9,7 @@ var KeyItem = function() {
 	this.attachedToPlayer = false;
 	this.playerKeySprite = null;
 	this.keyTimer = null;
+	this._player = null;
 };
 
 KeyItem.prototype = {
@@ -49,6 +50,9 @@ KeyItem.prototype = {
 	// atualizacao por frame enquanto a chave esta no mapa
 	update: function(){
 		if(this.collected || !this.sprite) return;
+		if(this.attachedToPlayer && this.playerKeySprite && this._player){
+			this.playerKeySprite.x = this._player.x;
+		}
 	},
 
 	// apos coletar, a chave flutua acima da cabeca do jogador por alguns instantes
@@ -57,6 +61,7 @@ KeyItem.prototype = {
 	attachToPlayer: function(player, tileSize){
 		if(this.attachedToPlayer || !player) return;
 		this.attachedToPlayer = true;
+		this._player = player;
 
 		this.playerKeySprite = game.add.sprite(
 			player.x,
@@ -65,7 +70,6 @@ KeyItem.prototype = {
 			0
 		);
 		this.playerKeySprite.anchor.set(.5);
-		this.playerKeySprite.fixedToCamera = true;
 
 		var targetY = player.y - tileSize * 1.0;
 		game.add.tween(this.playerKeySprite).to({ y: targetY }, 600, Phaser.Easing.Sinusoidal.InOut, true, 0, -1, true);
@@ -76,6 +80,7 @@ KeyItem.prototype = {
 				this.playerKeySprite = null;
 			}
 			this.attachedToPlayer = false;
+			this._player = null;
 		}, this);
 	},
 

@@ -41,13 +41,15 @@ var PauseUI = {
 	createPauseOverlay: function(){
 		this.pauseGroup = game.add.group();
 		this.pauseGroup.visible = false;
+		this.pauseGroup.fixedToCamera = true;
 
 		var bg = game.add.graphics(0, 0, this.pauseGroup);
 		bg.beginFill(0x000000, 0.6);
 		bg.drawRect(0, 0, game.width, game.height);
 		bg.endFill();
 
-		game.add.text(game.world.centerX, 100, 'PAUSADO', {
+		var cx = game.width / 2;
+		game.add.text(cx, 100, 'PAUSADO', {
 			font: '36px ' + GameConfig.UI_FONT, fill: '#fff'
 		}, this.pauseGroup).anchor.set(.5);
 
@@ -56,7 +58,7 @@ var PauseUI = {
 		var startY = 200;
 		var spacing = 50;
 		for(var i = 0; i < pauseOptions.length; i++){
-			var txt = game.add.text(game.world.centerX, startY + i * spacing, pauseOptions[i], {
+			var txt = game.add.text(cx, startY + i * spacing, pauseOptions[i], {
 				font: '20px ' + GameConfig.UI_FONT, fill: '#fff'
 			}, this.pauseGroup);
 			txt.anchor.set(.5);
@@ -79,13 +81,15 @@ var PauseUI = {
 	createRestartConfirm: function(){
 		this.confirmGroup = game.add.group();
 		this.confirmGroup.visible = false;
+		this.confirmGroup.fixedToCamera = true;
 
 		var bg = game.add.graphics(0, 0, this.confirmGroup);
 		bg.beginFill(0x000000, 0.75);
 		bg.drawRect(0, 0, game.width, game.height);
 		bg.endFill();
 
-		game.add.text(game.world.centerX, 170, 'REINICIAR FASE?', {
+		var cx = game.width / 2;
+		game.add.text(cx, 170, 'REINICIAR FASE?', {
 			font: '24px ' + GameConfig.UI_FONT, fill: '#fff'
 		}, this.confirmGroup).anchor.set(.5);
 
@@ -94,7 +98,7 @@ var PauseUI = {
 		var startY = 260;
 		var spacing = 50;
 		for(var i = 0; i < confirmOptions.length; i++){
-			var txt = game.add.text(game.world.centerX, startY + i * spacing, confirmOptions[i], {
+			var txt = game.add.text(cx, startY + i * spacing, confirmOptions[i], {
 				font: '20px ' + GameConfig.UI_FONT, fill: '#fff'
 			}, this.confirmGroup);
 			txt.anchor.set(.5);
@@ -145,7 +149,7 @@ var PauseUI = {
 		this.pauseGroup.visible = false;
 		this.confirmActive = false;
 		this.confirmGroup.visible = false;
-		AudioManager.resume();
+		this.onResume();
 	},
 
 	// chamado pela Stage a cada frame quando pausado
@@ -261,7 +265,7 @@ var PauseUI = {
 
 	updatePauseCoinPosition: function(){
 		var target = this.pauseTexts[this.pauseIndex];
-		this.pauseCoin.x = game.world.centerX - target.width / 2 - 22;
+		this.pauseCoin.x = game.width / 2 - target.width / 2 - 22;
 		this.pauseCoin.y = target.y;
 		this.pauseCoin.visible = true;
 		this.pauseCoinBobTime = 0;
@@ -269,7 +273,7 @@ var PauseUI = {
 
 	updateConfirmCoinPosition: function(){
 		var target = this.confirmTexts[this.confirmIndex];
-		this.confirmCoin.x = game.world.centerX - target.width / 2 - 22;
+		this.confirmCoin.x = game.width / 2 - target.width / 2 - 22;
 		this.confirmCoin.y = target.y;
 		this.confirmCoin.visible = true;
 		this.confirmCoinBobTime = 0;

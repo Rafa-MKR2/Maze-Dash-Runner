@@ -43,8 +43,6 @@ var gameState = {
 		});
 		this.keyDoor.spawn(this._map.keyPosition, this._map.doorPosition, GameConfig.TILE_SIZE);
 
-		this._map.data.maze[this._map.doorPosition.row][this._map.doorPosition.col] = 1;
-
 		this.coins = 0;
 		this.pauseCooldown = false;
 	},
@@ -165,8 +163,13 @@ var gameState = {
 	},
 
 	_setupUI: function(){
+		var self = this;
 		PauseUI.create({
-			onResume: function(){ AudioManager.resume(); },
+			onResume: function(){
+				AudioManager.resume();
+				self.pauseCooldown = true;
+				game.time.events.add(300, function(){ self.pauseCooldown = false; });
+			},
 			onRestart: function(){ AudioManager.stop(); game.state.start('game'); },
 			onQuit: function(){ AudioManager.stop(); game.state.start('menu'); }
 		});

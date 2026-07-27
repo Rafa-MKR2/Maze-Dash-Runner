@@ -34,6 +34,10 @@ StageHUD.prototype = {
 		this.staminaBarFill = game.add.graphics();
 		this.staminaBarFill.fixedToCamera = true;
 		this.updateStamina(config.stamina, config.maxStamina, false);
+
+		game.world.bringToTop(this.txtCoins);
+		game.world.bringToTop(this.txtScore);
+		game.world.bringToTop(this.txtTimer);
 	},
 
 	updateCoins: function(value){
@@ -81,15 +85,19 @@ StageHUD.prototype = {
 	showKeyIcon: function(){
 		if(this.sprKeyHUD) return;
 
-		this.sprKeyHUD = game.add.sprite(140, 16, 'key', 0);
-		this.sprKeyHUD.anchor.set(.5);
+		this.sprKeyHUD = game.add.sprite(game.width - 15, 32, 'key', 0);
+		this.sprKeyHUD.anchor.set(1, 0.5);
 		this.sprKeyHUD.scale.set(.75);
 		this.sprKeyHUD.fixedToCamera = true;
 
-		this.txtKeyHUD = game.add.text(162, 24, 'CHAVE', {
+		this.txtKeyHUD = game.add.text(game.width - 22, 34, 'CHAVE', {
 			font: '11px ' + GameConfig.UI_FONT, fill: '#ffcc00'
 		});
+		this.txtKeyHUD.anchor.set(1, 0);
 		this.txtKeyHUD.fixedToCamera = true;
+
+		game.world.bringToTop(this.sprKeyHUD);
+		game.world.bringToTop(this.txtKeyHUD);
 	},
 
 	hideKeyIcon: function(){
