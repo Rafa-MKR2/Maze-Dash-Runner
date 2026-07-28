@@ -216,6 +216,16 @@ h2 {
 	color: #ff6b6b;
 }
 
+.prop-input {
+	background: #0d0d1a;
+	color: #ffd700;
+	border: 1px solid #333;
+	border-radius: 3px;
+	padding: 3px 6px;
+	font-family: monospace;
+	font-size: 12px;
+}
+
 /* zoom */
 .zoom-controls {
 	display: flex;

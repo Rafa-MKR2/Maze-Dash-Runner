@@ -23,8 +23,8 @@ var gameState = {
 		SettingsManager.load();
 		PlayerData.load();
 
-		this._restoreScore();
 		this._setupStage();
+		this._restoreScore();
 		this._setupCamera();
 		this._setupEntities();
 		this._setupAudio();
@@ -108,7 +108,8 @@ var gameState = {
 		ParticleEffects.burstAt(PlayerController.sprite.x, PlayerController.sprite.y);
 
 		PlayerData.recordDeath();
-		PlayerData.recordGame(this.coins, GameConfig.TIME_LIMIT - this.timeRemaining);
+		var stageLimit = this._map ? (this._map.timeLimit || GameConfig.TIME_LIMIT) : GameConfig.TIME_LIMIT;
+		PlayerData.recordGame(this.coins, stageLimit - this.timeRemaining);
 
 		var data = { score: this.coins, time: this.timeRemaining, thiefScore: this.score };
 		if(reason) data.reason = reason;
@@ -129,7 +130,7 @@ var gameState = {
 			this.points = 0;
 			this.coins = 0;
 		}
-		this.timeRemaining = GameConfig.TIME_LIMIT;
+		this.timeRemaining = this._map.timeLimit || GameConfig.TIME_LIMIT;
 	},
 
 	_setupStage: function(){
@@ -206,7 +207,7 @@ var gameState = {
 		});
 		game.world.bringToTop(this.hud.group);
 
-		var txtLevel = game.add.text(15, game.height - 20, this._map.stageName + ' - ' + this._map.variation, {
+		var txtLevel = game.add.text(15, game.height - 20, this._map.stageName, {
 			font: '11px ' + GameConfig.UI_FONT, fill: '#aaa'
 		});
 		txtLevel.fixedToCamera = true;
@@ -222,7 +223,8 @@ var gameState = {
 		AudioManager.playCoin();
 		this.coins++;
 		this.points += 23;
-		this.timeRemaining = Math.min(this.timeRemaining + GameConfig.TIME_BONUS_PER_COIN, GameConfig.TIME_LIMIT);
+		var maxTime = this._map ? (this._map.timeLimit || GameConfig.TIME_LIMIT) : GameConfig.TIME_LIMIT;
+		this.timeRemaining = Math.min(this.timeRemaining + GameConfig.TIME_BONUS_PER_COIN, maxTime);
 		this.hud.updateCoins(this.coins);
 		this.hud.updateScore(this.points);
 		this.hud.showFloatingText(x, y, '+2s', '#44cc44');
@@ -262,13 +264,11 @@ var gameState = {
 	_transitionNextStage: function(){
 		this.hud.hideKeyIcon();
 
-		var nextStage = (this.persistedStage || 1) + 1;
-
 		game.state.start('game', true, false, {
 			score: this.score,
 			points: this.points,
 			coins: this.coins,
-			stage: nextStage
+			stage: 1
 		});
 	}
 

@@ -32,6 +32,7 @@ var Editor = {
 
 		// botoes de acao
 		document.getElementById('btn-export').addEventListener('click', this._onExport.bind(this));
+		document.getElementById('btn-export-json').addEventListener('click', this._onExportJSON.bind(this));
 		document.getElementById('btn-import').addEventListener('click', this._onImport.bind(this));
 		document.getElementById('btn-new').addEventListener('click', this._onNew.bind(this));
 
@@ -71,7 +72,20 @@ var Editor = {
 		}
 		Renderer.draw(this.grid);
 		Toolbar.updateCounters(this.grid);
+		this._updatePropCoins();
 		Toolbar.showErrors(Validator.validate(this.grid));
+	},
+
+	_updatePropCoins: function(){
+		var el = document.getElementById('prop-coins');
+		if(!el) return;
+		var count = 0;
+		for(var r = 0; r < this.grid.rows; r++){
+			for(var c = 0; c < this.grid.cols; c++){
+				if(this.grid.data[r][c] === 3) count++;
+			}
+		}
+		el.textContent = count;
 	},
 
 	// --- EVENTOS DE MOUSE ---
@@ -101,6 +115,42 @@ var Editor = {
 		textarea.value = text;
 		textarea.select();
 		Toolbar.showMessage('Mapa exportado! Copie o texto acima.');
+	},
+
+	_onExportJSON: function(){
+		var name = document.getElementById('prop-name').value || 'Novo Mapa';
+		var stage = parseInt(document.getElementById('prop-stage').value, 10) || 1;
+		var timeLimit = parseInt(document.getElementById('prop-time').value, 10) || 150;
+
+		var mapText = Parser.export(this.grid);
+		var mapLines = mapText.split('\n');
+
+		var coinCount = 0;
+		for(var r = 0; r < this.grid.rows; r++){
+			for(var c = 0; c < this.grid.cols; c++){
+				if(this.grid.data[r][c] === 3) coinCount++;
+			}
+		}
+
+		var id = 'stage' + stage + '_manual';
+
+		var data = {
+			version: 1,
+			stage: stage,
+			id: id,
+			name: name,
+			musicKey: 'music1',
+			enemyType: 'goblin',
+			coinCount: coinCount,
+			timeLimit: timeLimit,
+			enemySpawns: [],
+			map: mapLines
+		};
+
+		var textarea = document.getElementById('export-text');
+		textarea.value = JSON.stringify(data, null, '\t');
+		textarea.select();
+		Toolbar.showMessage('JSON exportado! Copie o conteudo acima.');
 	},
 
 	_onImport: function(){

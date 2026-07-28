@@ -55,8 +55,20 @@
 		</div>
 
 		<div class="info-box">
+			<h2>Propriedades</h2>
+			<p>Nome: <input type="text" id="prop-name" value="Novo Mapa" class="prop-input"></p>
+			<p>Estagio: <input type="number" id="prop-stage" value="1" min="1" class="prop-input" style="width:50px"></p>
+			<p>Tempo: <input type="number" id="prop-time" value="150" min="30" class="prop-input" style="width:60px">s</p>
+			<p>Moedas: <span id="prop-coins">0</span></p>
+		</div>
+
+		<div class="info-box">
 			<h2>Exportar / Importar</h2>
-			<textarea class="text-area" id="export-text" rows="4" readonly placeholder="Clique em Exportar para gerar o mapa..."></textarea>
+			<button class="action-btn primary" id="btn-export-json">Exportar JSON</button>
+			<button class="action-btn" id="btn-export">Exportar Texto</button>
+			<button class="action-btn" id="btn-import">Importar</button>
+			<button class="action-btn danger" id="btn-new">Novo</button>
+			<textarea class="text-area" id="export-text" rows="4" readonly placeholder="Clique em Exportar para gerar saida..."></textarea>
 			<textarea class="text-area" id="import-text" rows="4" placeholder="Cole um mapa aqui e clique em Importar..."></textarea>
 		</div>
 
