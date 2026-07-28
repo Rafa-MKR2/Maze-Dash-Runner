@@ -7,6 +7,7 @@ StageData.register({
 	enemyType: 'goblin',
 	coinCount: 4,
 	timeLimit: 150,
+	doorPosition: { row: 1, col: 12 },
 	enemySpawns: [
 		{ row: 1, col: 1 },
 		{ row: 1, col: 19 },

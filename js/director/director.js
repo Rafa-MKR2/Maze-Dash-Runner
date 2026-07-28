@@ -103,6 +103,12 @@ var Director = {
 			occupied[enemySpawns[s].row + ',' + enemySpawns[s].col] = true;
 		}
 
+		var doorPosition;
+		if(variation.doorPosition){
+			doorPosition = variation.doorPosition;
+			occupied[doorPosition.row + ',' + doorPosition.col] = true;
+		}
+
 		var freeTiles = [];
 		for(var i = 0; i < walkable.length; i++){
 			var key = walkable[i].row + ',' + walkable[i].col;
@@ -122,7 +128,9 @@ var Director = {
 
 		occupied[keyPosition.row + ',' + keyPosition.col] = true;
 
-		var doorPosition = this.pickDoorPosition(maze, occupied, freeTiles, maze.length, maze[0].length);
+		if(!doorPosition){
+			doorPosition = this.pickDoorPosition(maze, occupied, freeTiles, maze.length, maze[0].length);
+		}
 
 		return {
 			keyPosition: keyPosition,
