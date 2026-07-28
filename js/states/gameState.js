@@ -11,11 +11,13 @@ var gameState = {
 			this.persistedPoints = data.points || 0;
 			this.persistedCoins = data.coins || 0;
 			this.persistedStage = data.stage || 1;
+			this.persistedDodged = data.enemiesDodged || 0;
 		} else {
 			this.persistedScore = null;
 			this.persistedPoints = null;
 			this.persistedCoins = null;
 			this.persistedStage = null;
+			this.persistedDodged = null;
 		}
 	},
 
@@ -31,11 +33,8 @@ var gameState = {
 
 		this.keyDoor = new KeyDoorManager({
 			onKeyCollected: this._onKeyCollected.bind(this),
-			onDoorTouch: function(){
-				AudioManager.stop();
-				AudioManager.playWin();
-			},
-			onStageComplete: this._onStageComplete.bind(this)
+			onDoorTouch: this._onDoorTouch.bind(this),
+			onStageComplete: function(){}
 		});
 		this.keyDoor.spawn(this._map.keyPosition, this._map.doorPosition, GameConfig.TILE_SIZE);
 
@@ -107,9 +106,8 @@ var gameState = {
 		AudioManager.playLose();
 		ParticleEffects.burstAt(PlayerController.sprite.x, PlayerController.sprite.y);
 
-		PlayerData.recordDeath();
 		var stageLimit = this._map ? (this._map.timeLimit || GameConfig.TIME_LIMIT) : GameConfig.TIME_LIMIT;
-		PlayerData.recordGame(this.coins, stageLimit - this.timeRemaining);
+		PlayerData.recordGame(this.points, stageLimit - this.timeRemaining);
 
 		var data = { score: this.coins, time: this.timeRemaining, thiefScore: this.score };
 		if(reason) data.reason = reason;
@@ -125,10 +123,12 @@ var gameState = {
 			this.score = this.persistedScore;
 			this.points = this.persistedPoints;
 			this.coins = this.persistedCoins;
+			this.enemiesDodged = this.persistedDodged;
 		} else {
 			this.score = 0;
 			this.points = 0;
 			this.coins = 0;
+			this.enemiesDodged = 0;
 		}
 		this.timeRemaining = this._map.timeLimit || GameConfig.TIME_LIMIT;
 	},
@@ -236,6 +236,7 @@ var gameState = {
 			this.coins -= GameConfig.GOBLIN_STEAL_COINS;
 			this.score += GameConfig.GOBLIN_STEAL_COINS;
 			this.points += 5;
+			this.enemiesDodged++;
 			this.hud.updateCoins(this.coins);
 			this.hud.updateScore(this.points);
 			this.hud.showFloatingText(PlayerController.sprite.x, PlayerController.sprite.y, '-' + GameConfig.GOBLIN_STEAL_COINS, '#ff4444');
@@ -257,18 +258,34 @@ var gameState = {
 		this.hud.showMessage('Uma porta foi destrancada!');
 	},
 
-	_onStageComplete: function(){
-		this._transitionNextStage();
-	},
-
-	_transitionNextStage: function(){
+	_onDoorTouch: function(){
+		AudioManager.stop();
+		AudioManager.playWin();
 		this.hud.hideKeyIcon();
 
-		game.state.start('game', true, false, {
-			score: this.score,
-			points: this.points,
+		this.points += 200;
+
+		var stageLimit = this._map.timeLimit || GameConfig.TIME_LIMIT;
+		var timeUsed = Math.round((stageLimit - this.timeRemaining) * 10) / 10;
+
+		PlayerData.recordGame(this.points, timeUsed);
+		PlayerData.recordLevelComplete();
+
+		var self = this;
+		ResultScreen.show({
+			time: timeUsed,
+			enemiesDodged: this.enemiesDodged,
 			coins: this.coins,
-			stage: 1
+			totalPoints: this.points,
+			onContinue: function(){
+				game.state.start('game', true, false, {
+					score: self.score,
+					points: self.points,
+					coins: self.coins,
+					stage: 1,
+					enemiesDodged: self.enemiesDodged
+				});
+			}
 		});
 	}
 

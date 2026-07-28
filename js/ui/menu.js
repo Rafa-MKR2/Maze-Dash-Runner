@@ -8,9 +8,9 @@ var menuState = {
 
 	menuItems: [
 		{ label: 'JOGAR',         action: 'play' },
-		{ label: 'CONFIGURACOES', action: 'settings' },
 		{ label: 'RECORDES',      action: 'records' },
 		{ label: 'CREDITOS',      action: 'credits' },
+		{ label: 'CONFIGURACOES', action: 'settings' },
 		{ label: 'SAIR',          action: 'quit' }
 	],
 

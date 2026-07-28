@@ -3,11 +3,9 @@ var PlayerData = {
 	STORAGE_KEY: 'mazeDashData',
 
 	defaults: {
-		gamesPlayed: 0,
-		deaths: 0,
-		totalCoins: 0,
+		bestScore: 0,
 		bestTime: null,
-		bestScore: 0
+		levelsCompleted: 0
 	},
 
 	stats: {},
@@ -36,11 +34,9 @@ var PlayerData = {
 		} catch(e){}
 	},
 
-	recordGame: function(coins, time){
-		this.stats.gamesPlayed++;
-		this.stats.totalCoins += coins;
-		if(coins > this.stats.bestScore){
-			this.stats.bestScore = coins;
+	recordGame: function(score, time){
+		if(score > this.stats.bestScore){
+			this.stats.bestScore = score;
 		}
 		if(time !== null && time !== undefined){
 			if(this.stats.bestTime === null || time < this.stats.bestTime){
@@ -50,8 +46,8 @@ var PlayerData = {
 		this.save();
 	},
 
-	recordDeath: function(){
-		this.stats.deaths++;
+	recordLevelComplete: function(){
+		this.stats.levelsCompleted++;
 		this.save();
 	}
 
