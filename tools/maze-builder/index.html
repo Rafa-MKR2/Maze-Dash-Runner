@@ -48,13 +48,6 @@
 		</div>
 
 		<div class="info-box">
-			<h2>Acoes</h2>
-			<button class="action-btn primary" id="btn-export">Exportar</button>
-			<button class="action-btn" id="btn-import">Importar</button>
-			<button class="action-btn danger" id="btn-new">Novo</button>
-		</div>
-
-		<div class="info-box">
 			<h2>Propriedades</h2>
 			<p>Nome: <input type="text" id="prop-name" value="Novo Mapa" class="prop-input"></p>
 			<p>Estagio: <input type="number" id="prop-stage" value="1" min="1" class="prop-input" style="width:50px"></p>
@@ -63,13 +56,19 @@
 		</div>
 
 		<div class="info-box">
-			<h2>Exportar / Importar</h2>
-			<button class="action-btn primary" id="btn-export-json">Exportar JSON</button>
-			<button class="action-btn" id="btn-export">Exportar Texto</button>
-			<button class="action-btn" id="btn-import">Importar</button>
-			<button class="action-btn danger" id="btn-new">Novo</button>
-			<textarea class="text-area" id="export-text" rows="4" readonly placeholder="Clique em Exportar para gerar saida..."></textarea>
-			<textarea class="text-area" id="import-text" rows="4" placeholder="Cole um mapa aqui e clique em Importar..."></textarea>
+			<h2>Exportar</h2>
+			<button class="action-btn primary" id="btn-export">Exportar Codigo</button>
+			<textarea class="text-area" id="export-text" rows="8" readonly placeholder="Clique em Exportar Codigo para gerar saida..."></textarea>
+		</div>
+
+		<div class="info-box">
+			<h2>Importar</h2>
+			<textarea class="text-area" id="import-text" rows="4" placeholder="Cole o texto do mapa aqui..."></textarea>
+			<button class="action-btn" id="btn-import" style="margin-top:6px">Importar</button>
+		</div>
+
+		<div class="info-box">
+			<button class="action-btn danger" id="btn-new">Novo Mapa</button>
 		</div>
 
 		<div class="info-box validation-box">

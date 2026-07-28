@@ -32,7 +32,6 @@ var Editor = {
 
 		// botoes de acao
 		document.getElementById('btn-export').addEventListener('click', this._onExport.bind(this));
-		document.getElementById('btn-export-json').addEventListener('click', this._onExportJSON.bind(this));
 		document.getElementById('btn-import').addEventListener('click', this._onImport.bind(this));
 		document.getElementById('btn-new').addEventListener('click', this._onNew.bind(this));
 
@@ -110,14 +109,6 @@ var Editor = {
 	// --- BOTOES ---
 
 	_onExport: function(){
-		var text = Parser.export(this.grid);
-		var textarea = document.getElementById('export-text');
-		textarea.value = text;
-		textarea.select();
-		Toolbar.showMessage('Mapa exportado! Copie o texto acima.');
-	},
-
-	_onExportJSON: function(){
 		var name = document.getElementById('prop-name').value || 'Novo Mapa';
 		var stage = parseInt(document.getElementById('prop-stage').value, 10) || 1;
 		var timeLimit = parseInt(document.getElementById('prop-time').value, 10) || 150;
@@ -126,45 +117,91 @@ var Editor = {
 		var mapLines = mapText.split('\n');
 
 		var coinCount = 0;
+		var playerPos = null;
 		for(var r = 0; r < this.grid.rows; r++){
 			for(var c = 0; c < this.grid.cols; c++){
-				if(this.grid.data[r][c] === 3) coinCount++;
+				var v = this.grid.data[r][c];
+				if(v === 3) coinCount++;
+				if(v === 2) playerPos = { row: r, col: c };
 			}
 		}
 
 		var id = 'stage' + stage + '_manual';
 
-		var data = {
-			version: 1,
-			stage: stage,
-			id: id,
-			name: name,
-			musicKey: 'music1',
-			enemyType: 'goblin',
-			coinCount: coinCount,
-			timeLimit: timeLimit,
-			enemySpawns: [],
-			map: mapLines
-		};
+		var enemySpawns = [];
+		if(playerPos){
+			enemySpawns.push({ row: Math.max(1, playerPos.row - 2), col: playerPos.col });
+			enemySpawns.push({ row: Math.min(this.grid.rows - 2, playerPos.row + 2), col: playerPos.col });
+			enemySpawns.push({ row: playerPos.row, col: Math.max(1, playerPos.col - 2) });
+			enemySpawns.push({ row: playerPos.row, col: Math.min(this.grid.cols - 2, playerPos.col + 2) });
+		}
+
+		var code =
+			'StageData.register({\n' +
+			'\tversion: 1,\n' +
+			'\tstage: ' + stage + ',\n' +
+			'\tid: \'' + id + '\',\n' +
+			'\tname: \'' + name + '\',\n' +
+			'\tmusicKey: \'music1\',\n' +
+			'\tenemyType: \'goblin\',\n' +
+			'\tcoinCount: ' + coinCount + ',\n' +
+			'\ttimeLimit: ' + timeLimit + ',\n' +
+			'\tenemySpawns: ' + JSON.stringify(enemySpawns, null, '\t').replace(/\n/g, '\n\t') + ',\n' +
+			'\tmap: [\n';
+
+		for(var i = 0; i < mapLines.length; i++){
+			code += '\t\t\'' + mapLines[i] + '\'';
+			if(i < mapLines.length - 1) code += ',';
+			code += '\n';
+		}
+
+		code +=
+			'\t]\n' +
+			'});';
 
 		var textarea = document.getElementById('export-text');
-		textarea.value = JSON.stringify(data, null, '\t');
+		textarea.value = code;
 		textarea.select();
-		Toolbar.showMessage('JSON exportado! Copie o conteudo acima.');
+		Toolbar.showMessage('Codigo gerado! Copie e cole em um arquivo .js.');
 	},
 
 	_onImport: function(){
 		var text = document.getElementById('import-text').value.trim();
 		if(!text){
-			Toolbar.showMessage('Cole um mapa textual no campo Importar primeiro.', true);
+			Toolbar.showMessage('Cole um mapa ou JSON no campo Importar primeiro.', true);
 			return;
 		}
-		var imported = Parser.parse(text);
-		if(!imported){
-			Toolbar.showMessage('Nao foi possivel interpretar o texto.', true);
+
+		var grid = null;
+
+		// tenta interpretar como JSON (formato StageData.register)
+		try {
+			var parsed = JSON.parse(text);
+			if(parsed.map && Array.isArray(parsed.map)){
+				grid = Parser.parse(parsed.map.join('\n'));
+				if(grid && parsed.name){
+					document.getElementById('prop-name').value = parsed.name;
+				}
+				if(grid && parsed.stage){
+					document.getElementById('prop-stage').value = parsed.stage;
+				}
+				if(grid && parsed.timeLimit){
+					document.getElementById('prop-time').value = parsed.timeLimit;
+				}
+			}
+		} catch(e) {}
+
+		// fallback: tenta como texto de mapa puro
+		if(!grid){
+			grid = Parser.parse(text);
+		}
+
+		if(!grid){
+			Toolbar.showMessage('Nao foi possivel interpretar o conteudo.', true);
 			return;
 		}
-		this.grid = imported;
+
+		this.grid = grid;
 		Renderer.draw(this.grid);
 		Toolbar.updateCounters(this.grid);
 		var errors = Validator.validate(this.grid);
