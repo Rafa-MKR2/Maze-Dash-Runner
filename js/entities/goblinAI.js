@@ -1,6 +1,7 @@
-var GoblinAI = function(maze, enemy, onLostPlayer){
+var GoblinAI = function(maze, enemy, doorPosition, onLostPlayer){
 	this.maze = maze;
 	this.enemy = enemy;
+	this.doorPosition = doorPosition || null;
 	this.state = 'PATROL';
 	this.speed = GameConfig.ENEMY_SPEED;
 	this.hintTimer = 0;
@@ -96,7 +97,7 @@ GoblinAI.prototype = {
 
 	// verifica se nao ha paredes entre dois pontos na mesma linha/coluna
 	_isDoorTile: function(row, col){
-		return window._doorRow === row && window._doorCol === col;
+		return this.doorPosition && this.doorPosition.row === row && this.doorPosition.col === col;
 	},
 
 	checkLineOfSight: function(fromRow, fromCol, toRow, toCol){

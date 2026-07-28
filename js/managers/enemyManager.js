@@ -7,7 +7,7 @@ var EnemyManager = {
 	sprites: [],
 	ais: [],
 
-	create: function(spawnPositions, enemyType, maze, onGoblinLostPlayer){
+	create: function(spawnPositions, enemyType, maze, doorPosition, onGoblinLostPlayer){
 		var self = this;
 		var tileSize = GameConfig.TILE_SIZE;
 		this.sprites = [];
@@ -28,7 +28,7 @@ var EnemyManager = {
 		for(var i = 0; i < spawns.length; i++){
 			var spawnX = spawns[i].col * tileSize + tileSize / 2;
 			var spawnY = spawns[i].row * tileSize + tileSize / 2;
-			var entity = factory.create(spawnX, spawnY, maze, onGoblinLostPlayer);
+			var entity = factory.create(spawnX, spawnY, maze, doorPosition, onGoblinLostPlayer);
 			this.sprites.push(entity.sprite);
 			this.ais.push(entity.ai);
 		}

@@ -16,17 +16,10 @@ var recordsState = {
 			font: '18px ' + GameConfig.UI_FONT, fill: '#ffd700'
 		}).anchor.set(.5);
 
-		game.add.text(cx, 220, 'TEMPO', {
+		game.add.text(cx, 220, 'NIVEIS', {
 			font: '12px ' + GameConfig.UI_FONT, fill: '#aaa'
 		}).anchor.set(.5);
-		game.add.text(cx, 242, Utils.formatTime(PlayerData.stats.bestTime), {
-			font: '18px ' + GameConfig.UI_FONT, fill: '#ffd700'
-		}).anchor.set(.5);
-
-		game.add.text(cx, 290, 'NIVEIS', {
-			font: '12px ' + GameConfig.UI_FONT, fill: '#aaa'
-		}).anchor.set(.5);
-		game.add.text(cx, 312, Utils.formatNumber(PlayerData.stats.levelsCompleted, 3), {
+		game.add.text(cx, 242, Utils.formatNumber(PlayerData.stats.levelsCompleted, 3), {
 			font: '18px ' + GameConfig.UI_FONT, fill: '#ffd700'
 		}).anchor.set(.5);
 
@@ -34,7 +27,7 @@ var recordsState = {
 			font: '14px ' + GameConfig.UI_FONT, fill: '#fff'
 		}).anchor.set(.5);
 
-		this.menuCoin = game.add.sprite(320, 3850, 'coin');
+		this.menuCoin = game.add.sprite(320, 390, 'coin');
 		this.menuCoin.anchor.set(.5);
 		this.menuCoin.animations.add('spin', [0,1,2,3,4,5,6,7,8,9], 10, true).play();
 		this.coinBobTime = 0;

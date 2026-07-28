@@ -54,10 +54,6 @@ var endState = {
 			font: '15px ' + GameConfig.UI_FONT, fill: '#aaa'
 		}).anchor.set(.5);
 
-		game.add.text(cx, cy + 120, 'MELHOR TEMPO: ' + Utils.formatTime(PlayerData.stats.bestTime), {
-			font: '15px ' + GameConfig.UI_FONT, fill: '#aaa'
-		}).anchor.set(.5);
-
 		game.add.text(cx, cy + 180, 'ENTER PARA REINICIAR', {
 			font: '15px ' + GameConfig.UI_FONT, fill: '#fff'
 		}).anchor.set(.5);

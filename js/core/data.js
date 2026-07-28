@@ -4,7 +4,6 @@ var PlayerData = {
 
 	defaults: {
 		bestScore: 0,
-		bestTime: null,
 		levelsCompleted: 0
 	},
 
@@ -34,14 +33,9 @@ var PlayerData = {
 		} catch(e){}
 	},
 
-	recordGame: function(score, time){
+	recordGame: function(score){
 		if(score > this.stats.bestScore){
 			this.stats.bestScore = score;
-		}
-		if(time !== null && time !== undefined){
-			if(this.stats.bestTime === null || time < this.stats.bestTime){
-				this.stats.bestTime = time;
-			}
 		}
 		this.save();
 	},

@@ -41,8 +41,6 @@ var gameState = {
 		var dr = this._map.doorPosition.row;
 		var dc = this._map.doorPosition.col;
 		this._map.data.maze[dr][dc] = 1;
-		window._doorRow = dr;
-		window._doorCol = dc;
 
 		this._setupUI();
 
@@ -107,7 +105,7 @@ var gameState = {
 		ParticleEffects.burstAt(PlayerController.sprite.x, PlayerController.sprite.y);
 
 		var stageLimit = this._map ? (this._map.timeLimit || GameConfig.TIME_LIMIT) : GameConfig.TIME_LIMIT;
-		PlayerData.recordGame(this.points, stageLimit - this.timeRemaining);
+		PlayerData.recordGame(this.points);
 
 		var data = { score: this.coins, time: this.timeRemaining, thiefScore: this.score };
 		if(reason) data.reason = reason;
@@ -156,7 +154,7 @@ var gameState = {
 
 	_setupEntities: function(){
 		var self = this;
-		EnemyManager.create(this._map.enemySpawns, this._map.enemyType, this._map.data.maze, function(){
+		EnemyManager.create(this._map.enemySpawns, this._map.enemyType, this._map.data.maze, this._map.doorPosition, function(){
 			self.points += 5;
 			self.hud.updateScore(self.points);
 		});
@@ -268,7 +266,7 @@ var gameState = {
 		var stageLimit = this._map.timeLimit || GameConfig.TIME_LIMIT;
 		var timeUsed = Math.round((stageLimit - this.timeRemaining) * 10) / 10;
 
-		PlayerData.recordGame(this.points, timeUsed);
+		PlayerData.recordGame(this.points);
 		PlayerData.recordLevelComplete();
 
 		var self = this;
