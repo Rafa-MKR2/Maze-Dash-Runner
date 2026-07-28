@@ -26,6 +26,11 @@ var Director = {
 					Variation03
 				];
 				break;
+			case 2:
+				variations = [
+					Variation01_Stage02
+				];
+				break;
 			default:
 				variations = [Variation01];
 		}
@@ -188,7 +193,8 @@ var Director = {
 
 	getStageName: function(stageNumber) {
 		var names = {
-			1: 'Brick Maze'
+			1: 'Brick Maze',
+			2: 'Big Maze'
 		};
 		return names[stageNumber] || 'Stage ' + stageNumber;
 	}

@@ -10,10 +10,12 @@ var gameState = {
 			this.persistedScore = data.score || 0;
 			this.persistedPoints = data.points || 0;
 			this.persistedCoins = data.coins || 0;
+			this.persistedStage = data.stage || 1;
 		} else {
 			this.persistedScore = null;
 			this.persistedPoints = null;
 			this.persistedCoins = null;
+			this.persistedStage = null;
 		}
 	},
 
@@ -131,7 +133,8 @@ var gameState = {
 	},
 
 	_setupStage: function(){
-		this._map = Director.getStage(1);
+		var stageNumber = this.persistedStage || 1;
+		this._map = Director.getStage(stageNumber);
 		var tileSize = GameConfig.TILE_SIZE;
 
 		this._built = MapBuilder.build(this._map.data, tileSize);
@@ -259,10 +262,13 @@ var gameState = {
 	_transitionNextStage: function(){
 		this.hud.hideKeyIcon();
 
+		var nextStage = (this.persistedStage || 1) + 1;
+
 		game.state.start('game', true, false, {
 			score: this.score,
 			points: this.points,
-			coins: this.coins
+			coins: this.coins,
+			stage: nextStage
 		});
 	}
 

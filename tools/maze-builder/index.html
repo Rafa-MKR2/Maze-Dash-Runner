@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maze Builder</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<h1>Maze Builder <small>editor de mapas para Maze Dash Runner</small></h1>
+
+<div class="editor-layout">
+
+	<!-- BARRA DE FERRAMENTAS -->
+	<div class="toolbar-panel">
+		<h2>Ferramentas</h2>
+		<div class="tool-group">
+			<button class="tool-btn active" id="tool-wall" data-value="1"># Parede</button>
+			<button class="tool-btn" id="tool-floor" data-value="0">. Chao</button>
+			<button class="tool-btn" id="tool-player" data-value="2">S Jogador</button>
+			<button class="tool-btn" id="tool-coin" data-value="3">C Moeda</button>
+		</div>
+		<h2>Zoom</h2>
+		<div class="zoom-controls">
+			<button class="zoom-btn" id="btn-zoom-out">-</button>
+			<span id="zoom-level">100%</span>
+			<button class="zoom-btn" id="btn-zoom-in">+</button>
+		</div>
+	</div>
+
+	<!-- CANVAS -->
+	<div class="canvas-wrapper">
+		<canvas id="maze-canvas"></canvas>
+	</div>
+
+	<!-- PAINEL DIREITO -->
+	<div class="right-panel">
+
+		<div class="info-box">
+			<h2>Informacoes</h2>
+			<p>Tamanho: <span id="map-size">0x0</span></p>
+			<p># Paredes: <span id="count-walls">0</span></p>
+			<p>. Chao: <span id="count-floors">0</span></p>
+			<p>S Jogador: <span id="player-count">0</span></p>
+			<p>C Moedas: <span id="coin-count">0</span></p>
+			<div class="status-message" id="status-message"></div>
+		</div>
+
+		<div class="info-box">
+			<h2>Acoes</h2>
+			<button class="action-btn primary" id="btn-export">Exportar</button>
+			<button class="action-btn" id="btn-import">Importar</button>
+			<button class="action-btn danger" id="btn-new">Novo</button>
+		</div>
+
+		<div class="info-box">
+			<h2>Exportar / Importar</h2>
+			<textarea class="text-area" id="export-text" rows="4" readonly placeholder="Clique em Exportar para gerar o mapa..."></textarea>
+			<textarea class="text-area" id="import-text" rows="4" placeholder="Cole um mapa aqui e clique em Importar..."></textarea>
+		</div>
+
+		<div class="info-box validation-box">
+			<h2>Validacao</h2>
+			<div id="validation-errors"><span class="ok">Carregando...</span></div>
+		</div>
+
+	</div>
+
+</div>
+
+<script src="js/grid.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/toolbar.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/validator.js"></script>
+<script src="js/editor.js"></script>
+<script>Editor.init();</script>
+</body>
+</html>

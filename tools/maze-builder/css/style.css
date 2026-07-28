@@ -1,0 +1,245 @@
+/* Maze Builder - estilo minimalista.
+   Nada de frameworks, apenas CSS puro e funcional.
+   Segue a mesma filosofia do Maze Dash Runner: simples e direto. */
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	font-family: 'Segoe UI', Tahoma, sans-serif;
+	background: #1a1a2e;
+	color: #e0e0e0;
+	padding: 20px;
+	min-height: 100vh;
+}
+
+h1 {
+	font-size: 20px;
+	margin-bottom: 16px;
+	color: #ffd700;
+	font-weight: normal;
+	letter-spacing: 1px;
+}
+
+h1 small {
+	font-size: 12px;
+	color: #888;
+	margin-left: 10px;
+}
+
+h2 {
+	font-size: 13px;
+	color: #aaa;
+	margin-bottom: 8px;
+	font-weight: normal;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+}
+
+/* layout principal: toolbar a esquerda, canvas ao centro, paineis a direita */
+.editor-layout {
+	display: flex;
+	gap: 20px;
+	align-items: flex-start;
+}
+
+/* bara de ferramentas a esquerda */
+.toolbar-panel {
+	background: #16213e;
+	border: 1px solid #333;
+	border-radius: 6px;
+	padding: 14px;
+	min-width: 130px;
+}
+
+.tool-group {
+	margin-bottom: 16px;
+}
+
+.tool-btn {
+	display: block;
+	width: 100%;
+	padding: 8px 10px;
+	margin-bottom: 4px;
+	background: #1a1a3e;
+	color: #ccc;
+	border: 1px solid #333;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 13px;
+	font-family: monospace;
+	text-align: left;
+	transition: background 0.15s, border-color 0.15s;
+}
+
+.tool-btn:hover {
+	background: #2a2a5e;
+	border-color: #555;
+}
+
+.tool-btn.active {
+	background: #4caf50;
+	color: #fff;
+	border-color: #4caf50;
+}
+
+/* canvas */
+.canvas-wrapper {
+	flex-shrink: 0;
+	overflow: auto;
+	border: 1px solid #333;
+	border-radius: 6px;
+	background: #111;
+	padding: 4px;
+}
+
+#maze-canvas {
+	display: block;
+	cursor: crosshair;
+}
+
+/* painel direito: info, export, import */
+.right-panel {
+	flex: 1;
+	min-width: 220px;
+}
+
+.info-box {
+	background: #16213e;
+	border: 1px solid #333;
+	border-radius: 6px;
+	padding: 14px;
+	margin-bottom: 12px;
+}
+
+.info-box p {
+	font-size: 13px;
+	margin-bottom: 3px;
+	font-family: monospace;
+}
+
+.info-box span {
+	color: #ffd700;
+}
+
+/* botoes de acao */
+.action-btn {
+	padding: 8px 16px;
+	margin-right: 6px;
+	margin-bottom: 6px;
+	background: #0f3460;
+	color: #e0e0e0;
+	border: 1px solid #444;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 13px;
+	transition: background 0.15s;
+}
+
+.action-btn:hover {
+	background: #1a4a8a;
+}
+
+.action-btn.primary {
+	background: #4caf50;
+	border-color: #4caf50;
+	color: #fff;
+}
+
+.action-btn.primary:hover {
+	background: #5cbf60;
+}
+
+.action-btn.danger {
+	background: #8b0000;
+	border-color: #8b0000;
+}
+
+.action-btn.danger:hover {
+	background: #a00000;
+}
+
+/* campos de texto para export/import */
+.text-area {
+	width: 100%;
+	background: #0d0d1a;
+	color: #0f0;
+	border: 1px solid #333;
+	border-radius: 4px;
+	padding: 8px;
+	font-family: monospace;
+	font-size: 11px;
+	resize: vertical;
+	margin-top: 6px;
+}
+
+.text-area::selection {
+	background: #4caf50;
+	color: #fff;
+}
+
+/* validacao */
+.validation-box {
+	margin-top: 12px;
+}
+
+.validation-box ul {
+	list-style: none;
+	margin-top: 6px;
+}
+
+.validation-box li {
+	font-size: 12px;
+	color: #ff6b6b;
+	margin-bottom: 2px;
+	font-family: monospace;
+}
+
+.validation-box .ok {
+	color: #4caf50;
+	font-size: 13px;
+	font-family: monospace;
+}
+
+/* mensagem de status */
+.status-message {
+	margin-top: 12px;
+	font-size: 12px;
+	color: #888;
+	font-style: italic;
+}
+
+.status-message.error {
+	color: #ff6b6b;
+}
+
+/* zoom */
+.zoom-controls {
+	display: flex;
+	gap: 4px;
+	margin-top: 8px;
+}
+
+.zoom-btn {
+	padding: 4px 10px;
+	background: #1a1a3e;
+	color: #ccc;
+	border: 1px solid #333;
+	border-radius: 3px;
+	cursor: pointer;
+	font-size: 12px;
+}
+
+.zoom-btn:hover {
+	background: #2a2a5e;
+}
+
+#zoom-level {
+	font-size: 12px;
+	color: #ffd700;
+	padding: 4px 6px;
+	font-family: monospace;
+}
