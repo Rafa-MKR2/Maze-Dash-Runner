@@ -7,17 +7,20 @@ var ResultScreen = {
 	show: function(data){
 		this.onContinue = data.onContinue || function(){};
 
+		var vw = game.camera.view.width;
+		var vh = game.camera.view.height;
+
 		this.group = game.add.group();
 		this.group.fixedToCamera = true;
 		game.world.bringToTop(this.group);
 
 		var bg = game.add.graphics(0, 0, this.group);
 		bg.beginFill(0x000000, 0.65);
-		bg.drawRect(0, 0, game.width, game.height);
+		bg.drawRect(0, 0, vw, vh);
 		bg.endFill();
 
-		var cx = game.width / 2;
-		var cy = game.height / 2;
+		var cx = vw / 2;
+		var cy = vh / 2;
 		var bw = 280;
 		var bh = 230;
 

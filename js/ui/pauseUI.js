@@ -44,12 +44,15 @@ var PauseUI = {
 		this.pauseGroup.fixedToCamera = true;
 		game.world.bringToTop(this.pauseGroup);
 
+		var vw = game.camera.view.width;
+		var vh = game.camera.view.height;
+
 		var bg = game.add.graphics(0, 0, this.pauseGroup);
 		bg.beginFill(0x000000, 0.6);
-		bg.drawRect(0, 0, game.width, game.height);
+		bg.drawRect(0, 0, vw, vh);
 		bg.endFill();
 
-		var cx = game.width / 2;
+		var cx = vw / 2;
 		game.add.text(cx, 100, 'PAUSADO', {
 			font: '36px ' + GameConfig.UI_FONT, fill: '#fff'
 		}, this.pauseGroup).anchor.set(.5);
@@ -80,6 +83,9 @@ var PauseUI = {
 	},
 
 	createRestartConfirm: function(){
+		var vw = game.camera.view.width;
+		var vh = game.camera.view.height;
+
 		this.confirmGroup = game.add.group();
 		this.confirmGroup.visible = false;
 		this.confirmGroup.fixedToCamera = true;
@@ -87,10 +93,10 @@ var PauseUI = {
 
 		var bg = game.add.graphics(0, 0, this.confirmGroup);
 		bg.beginFill(0x000000, 0.75);
-		bg.drawRect(0, 0, game.width, game.height);
+		bg.drawRect(0, 0, vw, vh);
 		bg.endFill();
 
-		var cx = game.width / 2;
+		var cx = vw / 2;
 		game.add.text(cx, 170, 'REINICIAR FASE?', {
 			font: '24px ' + GameConfig.UI_FONT, fill: '#fff'
 		}, this.confirmGroup).anchor.set(.5);
@@ -267,7 +273,7 @@ var PauseUI = {
 
 	updatePauseCoinPosition: function(){
 		var target = this.pauseTexts[this.pauseIndex];
-		this.pauseCoin.x = game.width / 2 - target.width / 2 - 22;
+		this.pauseCoin.x = game.camera.view.width / 2 - target.width / 2 - 22;
 		this.pauseCoin.y = target.y;
 		this.pauseCoin.visible = true;
 		this.pauseCoinBobTime = 0;
@@ -275,7 +281,7 @@ var PauseUI = {
 
 	updateConfirmCoinPosition: function(){
 		var target = this.confirmTexts[this.confirmIndex];
-		this.confirmCoin.x = game.width / 2 - target.width / 2 - 22;
+		this.confirmCoin.x = game.camera.view.width / 2 - target.width / 2 - 22;
 		this.confirmCoin.y = target.y;
 		this.confirmCoin.visible = true;
 		this.confirmCoinBobTime = 0;
